@@ -200,7 +200,7 @@ class NNBot(AbstractBot):
 
         directions = ["RIGHT", "LEFT", "UP", "DOWN"]
 
-        return directions[np.argmin(outputs)]
+        return directions[np.argmax(outputs)]
 
     def get_init_input(self, init):
         nb_players_str, my_id_str = init.split()

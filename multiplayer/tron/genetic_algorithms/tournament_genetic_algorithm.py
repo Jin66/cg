@@ -12,9 +12,15 @@ class TournamentGeneticAlgorithm:
     number_offspring = 20
     mutation_factor = 2
 
-    def __init__(self, number_generation):
+    def __init__(self, number_generation, population=None):
         self.number_generation = number_generation
-        self.population = []
+
+        if population is None:
+            print("Creating random population...")
+            self.init_population(self.population_size)
+        else:
+            print("Using imported population...(", len(population), ")")
+            self.population = population
 
     def init_population(self, population_size):
         self.population = self.get_random_individuals(self.population_size)
@@ -23,7 +29,6 @@ class TournamentGeneticAlgorithm:
         return np.random.uniform(low=-self.uniform_params, high=self.uniform_params, size=(size, self.genes_size))
 
     def run(self):
-        self.init_population(self.population_size)
         results = {"fitness": []}
         for generation in range(self.number_generation):
             print("Generation:", generation)
@@ -42,6 +47,7 @@ class TournamentGeneticAlgorithm:
             self.population[self.number_parents + self.number_offspring:, :] = self.get_random_individuals(filing_size)
         index_best_parent = np.argsort(fitness_population)[-1]
         results["best_individual"] = self.population[index_best_parent]
+        results["population"] = self.population
         return results
 
     def launch_tournament(self):

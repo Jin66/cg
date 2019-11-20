@@ -1,17 +1,9 @@
-import cProfile
-import io
-import pstats
-
 import numpy as np
-from matplotlib import pyplot as plt
 
-from multiplayer.tron.engine import GameEngine
-from multiplayer.tron.genetic_algorithms.tournament_genetic_algorithm import TournamentGeneticAlgorithm
 from multiplayer.tron.bots.nn_bot import NNBot
+from multiplayer.tron.engine import GameEngine
 
 if __name__ == '__main__':
-    pr = cProfile.Profile()
-    pr.enable()
 
     w1 = np.array(
         [2.85279164, 1.93618624, 1.0547554, 1.39014364, - 4.56926338, 2.39373373,
@@ -52,15 +44,3 @@ if __name__ == '__main__':
                 break
             turn_number += 1
 
-    # tournamentGeneticAlgorithm = TournamentGeneticAlgorithm(50)
-    # results = tournamentGeneticAlgorithm.run()
-    # print(results)
-    #
-    # plt.plot(results["fitness"])
-    # plt.show()
-    #
-    # pr.disable()
-    # s = io.StringIO()
-    # ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
-    # ps.print_stats()
-    # print(s.getvalue())
