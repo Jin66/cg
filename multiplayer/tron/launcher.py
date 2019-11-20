@@ -5,9 +5,9 @@ import pstats
 import numpy as np
 from matplotlib import pyplot as plt
 
-from cg.multiplayer.tron.engine import GameEngine
-from cg.multiplayer.tron.genetic_algorithms.tournament_genetic_algorithm import TournamentGeneticAlgorithm
-from cg.multiplayer.tron.bots.nn_bot import NNBot
+from multiplayer.tron.engine import GameEngine
+from multiplayer.tron.genetic_algorithms.tournament_genetic_algorithm import TournamentGeneticAlgorithm
+from multiplayer.tron.bots.nn_bot import NNBot
 
 if __name__ == '__main__':
     pr = cProfile.Profile()

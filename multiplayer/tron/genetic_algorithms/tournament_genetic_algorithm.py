@@ -1,7 +1,7 @@
 import numpy as np
 
-from cg.multiplayer.tron.bots.nn_bot import NNBot
-from cg.multiplayer.tron.engine import GameEngine
+from multiplayer.tron.bots.nn_bot import NNBot
+from multiplayer.tron.engine import GameEngine
 
 
 class TournamentGeneticAlgorithm:

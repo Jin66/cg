@@ -1,4 +1,4 @@
-from cg.multiplayer.tron.bots.abstract_bot import AbstractBot
+from multiplayer.tron.bots.abstract_bot import AbstractBot
 
 
 class ConstantBot(AbstractBot):
