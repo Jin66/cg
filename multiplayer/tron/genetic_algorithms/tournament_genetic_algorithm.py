@@ -24,13 +24,17 @@ class TournamentGeneticAlgorithm:
 
     def run(self):
         self.init_population(self.population_size)
-        results = {"fitness": []}
+        results = {"best_fitness": [], "worst_fitness": [], "mean_fitness": []}
         for generation in range(self.number_generation):
             print("Generation:", generation)
             fitness_population = self.launch_tournament()
             index_best = np.argsort(fitness_population)
-            results["fitness"].append(fitness_population[index_best[-1]])
+            results["best_fitness"].append(fitness_population[index_best[-1]])
             print("Best fitness:", fitness_population[index_best[-1]])
+            results["worst_fitness"].append(fitness_population[index_best[0]])
+            print("Worst fitness:", fitness_population[index_best[0]])
+            results["mean_fitness"].append(np.mean(fitness_population))
+            print("Mean fitness:", np.mean(fitness_population))
             print(self.population[index_best[-1]])
             parents = self.selection(fitness_population, self.number_parents, index_best)
             offspring = self.crossover(parents, (self.number_offspring, self.genes_size))
@@ -77,15 +81,16 @@ class TournamentGeneticAlgorithm:
                 break
             turn_number += 1
 
+        map(lambda score: score * score, bot_score_live_duration)
+
         # Give the winner a boost in score
         winners = [i for i, x in enumerate(bot_score_live_duration) if x == max(bot_score_live_duration)]
         for winner in winners:
-            bot_score_live_duration[winner] += 50
+            bot_score_live_duration[winner] *= 2
+            return bot_score_live_duration
 
-        return bot_score_live_duration
-
-    def selection(self, fitness_population, number_parents, index_best):
-        index_best_parents = index_best[-number_parents:]
+    def selection(self, fitness_population, number_parents, indexes_best):
+        index_best_parents = indexes_best[-number_parents:]
         return self.population[index_best_parents, :]
 
     def crossover(self, parents, offspring_size):

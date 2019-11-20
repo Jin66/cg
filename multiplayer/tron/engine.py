@@ -112,8 +112,8 @@ class GameEngine:
 
                 if self.bot_alive[i]:
                     self.bot_live_duration[i] += 1
-        #if self.debug:
-        self.board.print()
+        if self.debug:
+            self.board.print()
 
     def execute_play(self, idx_bot, next_play):
         if next_play == "UP":
