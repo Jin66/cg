@@ -1,6 +1,6 @@
 import numpy as np
 
-from multiplayer.tron.bots.nn_bot import NNBot
+from multiplayer.tron.bots.nn_bot import NNBot, InputMode
 from multiplayer.tron.engine import GameEngine
 
 if __name__ == '__main__':
@@ -29,18 +29,20 @@ if __name__ == '__main__':
          8.37242986, -3.76990631, -12.46569119]
     )
 
-    bot1 = NNBot(w1)
-    bot2 = NNBot(w2)
+    bot1 = NNBot(weights=w1, input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.AccessibleCells])
+    bot2 = NNBot(weights=w2, input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.AccessibleCells])
+
+    botRandom1 = NNBot(can_lose_stupidly=False, input_modes=[InputMode.DistanceSquare, InputMode.BotsPosition])
+    botRandom2 = NNBot(can_lose_stupidly=False, input_modes=[InputMode.DistanceSquare, InputMode.BotsPosition])
 
     for i in range(1):
-        gameEngine = GameEngine([bot1, bot2], debug=True)
+        gameEngine = GameEngine([botRandom1, botRandom2], debug=True)
         turn_number = 0
         while True:
             gameEngine.next_turn()
             if gameEngine.is_finished():
                 print("Game finished at turn: " + str(turn_number))
-                winner = gameEngine.bot_live_duration.index(max(gameEngine.bot_live_duration))
-                print("Winner: " + str(winner))
+                winners = [i for i, x in enumerate(gameEngine.bot_live_duration) if x == max(gameEngine.bot_live_duration)]
+                print("Winner: " + str(winners))
                 break
             turn_number += 1
-

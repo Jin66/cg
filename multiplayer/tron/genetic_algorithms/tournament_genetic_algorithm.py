@@ -1,6 +1,6 @@
 import numpy as np
 
-from multiplayer.tron.bots.nn_bot import NNBot
+from multiplayer.tron.bots.nn_bot import NNBot, InputMode
 from multiplayer.tron.engine import GameEngine
 
 
@@ -66,7 +66,11 @@ class TournamentGeneticAlgorithm:
         # Generate bot list
         bots_list = []
         for id_population in ids_population:
-            bots_list.append(NNBot(self.population[id_population, :].T))
+            bots_list.append(
+                NNBot(weights=self.population[id_population, :].T,
+                      can_lose_stupidly=True,
+                      input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.BotsPosition])
+            )
 
         # Create game engine
         gameEngine = GameEngine(bots_list, debug=False)

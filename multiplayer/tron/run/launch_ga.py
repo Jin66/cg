@@ -11,9 +11,9 @@ if __name__ == '__main__':
     pr = cProfile.Profile()
     pr.enable()
 
-    file_name_save = "export/population.save"
+    file_name_save = "../export/population_square_pos_not_cls.save"
     population_saved = load_object(file_name_save)
-    tournamentGeneticAlgorithm = TournamentGeneticAlgorithm(20, population=population_saved)
+    tournamentGeneticAlgorithm = TournamentGeneticAlgorithm(200, population=population_saved)
     results = tournamentGeneticAlgorithm.run()
     save_object(results["population"], file_name_save)
 
