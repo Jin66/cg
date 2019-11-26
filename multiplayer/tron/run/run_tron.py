@@ -35,14 +35,8 @@ if __name__ == '__main__':
     botRandom1 = NNBot(can_lose_stupidly=False, input_modes=[InputMode.DistanceSquare, InputMode.BotsPosition])
     botRandom2 = NNBot(can_lose_stupidly=False, input_modes=[InputMode.DistanceSquare, InputMode.BotsPosition])
 
-    for i in range(1):
-        gameEngine = GameEngine([botRandom1, botRandom2], debug=True)
-        turn_number = 0
-        while True:
-            gameEngine.next_turn()
-            if gameEngine.is_finished():
-                print("Game finished at turn: " + str(turn_number))
-                winners = [i for i, x in enumerate(gameEngine.bot_live_duration) if x == max(gameEngine.bot_live_duration)]
-                print("Winner: " + str(winners))
-                break
-            turn_number += 1
+    number_games = 2
+    for i in range(number_games):
+        game_engine = GameEngine(debug=True)
+        results = game_engine.run([botRandom1, botRandom2])
+        print(results)

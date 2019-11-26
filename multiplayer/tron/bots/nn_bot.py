@@ -130,6 +130,8 @@ class NNBot(AbstractBot):
         self.my_id = 0
         self.can_lose_stupidly = can_lose_stupidly
         self.nb_players = 2  # Default
+        self.weights_matrix = []
+        self.turn = 0
 
         if input_modes is None:
             input_modes = [InputMode.DistanceSquare]
@@ -168,6 +170,8 @@ class NNBot(AbstractBot):
         line_number = 0
         for line in main_lines:
             x0, y0, x1, y1 = line.split()
+            if self.turn == 0 and (int(x0) != int(x1) or int(y0) != int(y1)):
+                self.board.set_cell(int(x0), int(y0), line_number)
             if int(x1) < 0:
                 self.board.clean(line_number)
             else:
@@ -177,6 +181,7 @@ class NNBot(AbstractBot):
                 self.board.set_cell(x1, y1, line_number)
                 self.board.update_accessible_neighbors(tuple([x1, y1]))
             line_number += 1
+        self.turn += 1
 
     def get_next_play(self):
         # Compute all inputs
@@ -251,13 +256,13 @@ class NNBot(AbstractBot):
         outputs = self.sigmoid(np.dot(inputs, self.weights_matrix))
         if not self.can_lose_stupidly:
             if input_array[0] == 0:
-                outputs[0] = 0
+                outputs[0] = 10000
             if input_array[2] == 0:
-                outputs[1] = 0
+                outputs[1] = 10000
             if input_array[3] == 0:
-                outputs[2] = 0
+                outputs[2] = 10000
             if input_array[1] == 0:
-                outputs[3] = 0
+                outputs[3] = 10000
         #  print("Outputs :", outputs)
 
         directions = ["RIGHT", "LEFT", "UP", "DOWN"]

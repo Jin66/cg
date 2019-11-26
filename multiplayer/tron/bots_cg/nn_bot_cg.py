@@ -130,6 +130,7 @@ class NNBot:
         self.my_id = 0
         self.can_lose_stupidly = can_lose_stupidly
         self.nb_players = 2  # Default
+        self.turn = 0
 
         if input_modes is None:
             input_modes = [InputMode.DistanceSquare]
@@ -168,6 +169,9 @@ class NNBot:
         line_number = 0
         for line in main_lines:
             x0, y0, x1, y1 = line.split()
+            if self.turn == 0 and (x0 != x1 or y0 != y1):
+                self.board.set_cell(x0, y0, line_number)
+                self.board.update_accessible_neighbors(tuple([x0, y0]))
             if int(x1) < 0:
                 self.board.clean(line_number)
             else:
@@ -177,6 +181,7 @@ class NNBot:
                 self.board.set_cell(x1, y1, line_number)
                 self.board.update_accessible_neighbors(tuple([x1, y1]))
             line_number += 1
+        self.turn += 1
 
     def get_next_play(self):
         # Compute all inputs
