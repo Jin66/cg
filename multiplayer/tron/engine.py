@@ -75,6 +75,11 @@ class GameEngine:
         self.debug = debug
 
     def run(self, bot_list):
+        """
+            Run a complete game for all the bots sent. Stopped when only one bot remains
+            :return: game results
+        """
+
         self.positions = []
         self.bot_list = bot_list
 

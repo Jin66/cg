@@ -1,5 +1,6 @@
 import numpy as np
 
+from multiplayer.tron.bots.basic_bot import BasicBot
 from multiplayer.tron.bots.nn_bot import NNBot, InputMode
 from multiplayer.tron.engine import GameEngine
 
@@ -38,5 +39,5 @@ if __name__ == '__main__':
     number_games = 2
     for i in range(number_games):
         game_engine = GameEngine(debug=True)
-        results = game_engine.run([botRandom1, botRandom2])
+        results = game_engine.run([botRandom1, botRandom2, BasicBot()])
         print(results)
