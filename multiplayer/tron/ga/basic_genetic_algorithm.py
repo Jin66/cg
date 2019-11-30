@@ -1,25 +1,17 @@
-import enum
+import statistics
 
 import numpy as np
-
-from multiplayer.tron.bots.nn_bot import NNBot, InputMode
-from multiplayer.tron.engine import GameEngine
-
-
-class FitnessMode(enum.Enum):
-    Winner = 1
-    LiveDuration = 2
 
 
 class BasicGeneticAlgorithm:
     population_size = 50
     uniform_params = 4
-    genes_size = 48
     number_parents = 20
     number_offspring = 20
     mutation_factor = 1
 
-    def __init__(self, number_generation, fitness_function, population=None):
+    def __init__(self, number_generation, fitness_function, population=None, genes_size=48):
+        self.genes_size = genes_size
         self.fitness_function = fitness_function
         self.number_generation = number_generation
 
@@ -37,23 +29,30 @@ class BasicGeneticAlgorithm:
         return np.random.uniform(low=-self.uniform_params, high=self.uniform_params, size=(size, self.genes_size))
 
     def run(self):
-        results = {"fitness": []}
+        results = {"fitness_mean": [], "fitness_best": []}
         fitness_population = []
         for generation in range(self.number_generation):
             print("Generation:", generation)
+
+            # Compute population fitness
             fitness_population = self.fitness_function.compute(self.population)
-            index_best = np.argsort(fitness_population)
-            results["fitness"].append(fitness_population[index_best[-1]])
-            print("Best fitness:", fitness_population[index_best[-1]])
-            print(self.population[index_best[-1]])
-            parents = self.selection(fitness_population, self.number_parents, index_best)
+            print("Fitness: ", fitness_population)
+            print("Mean fitness: ", statistics.mean(fitness_population))
+            results["fitness_mean"].append(statistics.mean(fitness_population))
+            sort_fitness = np.argsort(fitness_population)
+            print("Best fitness:", fitness_population[sort_fitness[-1]])
+            results["fitness_best"].append(fitness_population[sort_fitness[-1]])
+            print(self.population[sort_fitness[-1]])
+
+            # Generate new population
+            parents = self.selection(fitness_population, self.number_parents, sort_fitness)
             offspring = self.crossover(parents, (self.number_offspring, self.genes_size))
             mutated_offspring = self.mutate(offspring)
             self.population[0:self.number_parents, :] = parents
             self.population[self.number_parents:self.number_parents + self.number_offspring, :] = mutated_offspring
-
             filing_size = self.population_size - (self.number_parents + self.number_offspring)
             self.population[self.number_parents + self.number_offspring:, :] = self.get_random_individuals(filing_size)
+
         index_best_parent = np.argsort(fitness_population)[-1]
         results["best_individual"] = self.population[index_best_parent]
         results["population"] = self.population

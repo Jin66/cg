@@ -4,10 +4,11 @@ import pstats
 
 from matplotlib import pyplot as plt
 
+from multiplayer.tron.bots.basic_bot import BasicBot
 from multiplayer.tron.bots.nn_bot import NNBot, InputMode
 from multiplayer.tron.engine import GameEngine
-from multiplayer.tron.ga.basic_genetic_algorithm import BasicGeneticAlgorithm, FitnessMode
-from multiplayer.tron.ga.fitness_computation.tournament_fitness_calculator import TournamentFitnessCalculator
+from multiplayer.tron.ga.basic_genetic_algorithm import BasicGeneticAlgorithm
+from multiplayer.tron.ga.fitness_computation.basic_fitness_calculator import BasicFitnessCalculator, FitnessMode
 from multiplayer.tron.utils.io import save_object, load_object
 
 if __name__ == '__main__':
@@ -25,8 +26,15 @@ if __name__ == '__main__':
                                                             InputMode.DistanceDiag,
                                                             InputMode.BotsPosition]
                                                )
-    fitness_calculator = TournamentFitnessCalculator(bot_create_function, GameEngine())
-    tournamentGeneticAlgorithm = BasicGeneticAlgorithm(400, fitness_calculator, population=population_saved)
+    opponent_create_function = BasicBot
+    # fitness_calculator = TournamentFitnessCalculator(bot_create_function, GameEngine())
+    fitness_calculator = BasicFitnessCalculator(bot_create_function, opponent_create_function, GameEngine(),
+                                                nb_matchs=10,
+                                                fitness_mode=FitnessMode.Winner)
+    tournamentGeneticAlgorithm = BasicGeneticAlgorithm(400, fitness_calculator,
+                                                       population=population_saved,
+                                                       genes_size=64
+                                                       )
     results = tournamentGeneticAlgorithm.run()
     save_object(results["population"], file_name_save)
 

@@ -109,6 +109,9 @@ class GameEngine:
             pos_bot4.state = 1
             self.positions.append(pos_bot4)
 
+        # Shuffle positions
+        random.shuffle(self.positions)
+
         if self.debug:
             print("Initial positions:", self.positions)
 

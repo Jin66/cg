@@ -27,12 +27,12 @@ class TournamentFitnessCalculator(AbstractFitnessCalculator):
                     else:
                         score[opponent_id] += 1
                 if self.fitness_mode == FitnessMode.LiveDuration:
-                    score[individual_id] += result.lives_duration[0]
-                    score[opponent_id] += result.lives_duration[1]
                     if result.winner == 0:
                         score[individual_id] += 500
+                        score[opponent_id] += result.lives_duration[1]
                     else:
                         score[opponent_id] += 500
+                        score[individual_id] += result.lives_duration[0]
         if self.fitness_mode == FitnessMode.LiveDuration:
             for i in range(len(population)):
                 score[i] /= len(population)
