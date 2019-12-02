@@ -119,17 +119,6 @@ class GameEngine:
         for idx in range(len(self.bot_list)):
             self.bot_list[idx].get_init_input(str(len(self.bot_list)) + " " + str(idx))
 
-        # Not sure if necessary
-        # main_inputs = []
-        # for j in range(len(self.bot_list)):
-        #     main_inputs.append(str(self.positions[j].x) + " " +
-        #                        str(self.positions[j].y) + " " +
-        #                        str(self.positions[j].x) + " " +
-        #                        str(self.positions[j].y))
-        #
-        #     self.bot_list[idx].get_main_input(main_inputs)
-        #     self.positions[idx].state = idx
-
         # Run the game
         while True:
             is_finished = self.next_turn()
@@ -141,8 +130,8 @@ class GameEngine:
         Run a single turn for all the bots. Stopped if only one bot remains
         :return: if the game need to continue
         """
-        for i in range(len(self.bot_list)):
-            if self.bots_alive[i]:
+        for idx_bot in range(len(self.bot_list)):
+            if self.bots_alive[idx_bot]:
                 main_inputs = []
                 count_bot_alive = 0
                 for j in range(len(self.bot_list)):
@@ -154,12 +143,12 @@ class GameEngine:
                         count_bot_alive += 1
                     else:
                         main_inputs.append("-1 -1 -1 -1")
-                self.bot_list[i].get_main_input(main_inputs)
-                next_play = self.bot_list[i].get_next_play()
-                self.execute_play(i, next_play)
+                self.bot_list[idx_bot].get_main_input(main_inputs)
+                next_play = self.bot_list[idx_bot].get_next_play()
+                self.execute_play(idx_bot, next_play)
 
-                if self.bots_alive[i]:
-                    self.bots_live_duration[i] += 1
+                if self.bots_alive[idx_bot]:
+                    self.bots_live_duration[idx_bot] += 1
                 elif count_bot_alive == 2:
                     return True
         if self.debug:

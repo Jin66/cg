@@ -33,11 +33,13 @@ if __name__ == '__main__':
     bot1 = NNBot(weights=w1, input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.AccessibleCells])
     bot2 = NNBot(weights=w2, input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.AccessibleCells])
 
-    botRandom1 = NNBot(can_lose_stupidly=False, input_modes=[InputMode.DistanceSquare, InputMode.BotsPosition])
-    botRandom2 = NNBot(can_lose_stupidly=False, input_modes=[InputMode.DistanceSquare, InputMode.BotsPosition])
+    botRandom1 = NNBot(can_lose_stupidly=True,
+                       input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.BotsPosition])
+    botRandom2 = NNBot(can_lose_stupidly=True,
+                       input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.BotsPosition])
 
     number_games = 2
     for i in range(number_games):
         game_engine = GameEngine(debug=True)
-        results = game_engine.run([botRandom1, botRandom2, BasicBot()])
+        results = game_engine.run([botRandom1, botRandom2])
         print(results)
