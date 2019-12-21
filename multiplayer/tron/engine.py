@@ -5,7 +5,8 @@ class Results:
     lives_duration = []
     winner = 0
 
-    def __init__(self, lives_duration, winner):
+    def __init__(self, lives_duration, winner, moves):
+        self.moves = moves
         self.winner = winner
         self.lives_duration = lives_duration
 
@@ -24,6 +25,9 @@ class Position:
 
     def __repr__(self):
         return str(self.x) + "," + str(self.y)
+
+    def __eq__(self, other):
+        return (self.x, self.y) == (other.x, other.y)
 
 
 class Board:
@@ -71,6 +75,7 @@ class GameEngine:
     debug = False
 
     def __init__(self, debug=False):
+        self.moves = []
         self.board = Board(self.width, self.height)
         self.debug = debug
 
@@ -80,6 +85,7 @@ class GameEngine:
             :return: game results
         """
 
+        self.moves.clear()
         self.positions = []
         self.bot_list = bot_list
 
@@ -172,10 +178,12 @@ class GameEngine:
                 print("Bot number", idx_bot, "is dead, trying to go " + next_play + " from ", self.positions[idx_bot])
             self.bots_alive[idx_bot] = False
             self.board.clean(idx_bot)
+            self.moves.append((idx_bot, next_play, self.positions[idx_bot], None))
         else:
             if self.debug:
                 print("Bot number", idx_bot, " move from ", self.positions[idx_bot], " to ", next_cell, "(", next_play,
                       ")")
+            self.moves.append((idx_bot, next_play, self.positions[idx_bot], next_cell))
             self.positions[idx_bot] = next_cell
             next_cell.state = idx_bot
 
@@ -193,4 +201,4 @@ class GameEngine:
         for i, bot_live_duration in enumerate(self.bots_alive):
             if bot_live_duration:
                 winner = i
-        return Results(self.bots_live_duration, winner)
+        return Results(self.bots_live_duration, winner, self.moves)
