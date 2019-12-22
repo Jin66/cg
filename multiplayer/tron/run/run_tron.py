@@ -41,5 +41,5 @@ if __name__ == '__main__':
     number_games = 2
     for i in range(number_games):
         game_engine = GameEngine(debug=True)
-        results = game_engine.run([botRandom1, botRandom2])
+        results = game_engine.run([BasicBot(), BasicBot(), BasicBot(), BasicBot()])
         print(results)

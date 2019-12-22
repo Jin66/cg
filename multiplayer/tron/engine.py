@@ -97,23 +97,14 @@ class GameEngine:
         x_rand = random.randrange(self.width / 2)
         y_rand = random.randrange(self.height / 2)
 
-        pos_bot1 = self.board.cell(x_rand, y_rand)
-        pos_bot1.state = 0
-        self.positions.append(pos_bot1)
-
-        pos_bot2 = self.board.cell(self.width - 1 - x_rand, self.height - 1 - y_rand)
-        pos_bot2.state = 1
-        self.positions.append(pos_bot2)
+        self.positions.append(self.board.cell(x_rand, y_rand))
+        self.positions.append(self.board.cell(self.width - 1 - x_rand, self.height - 1 - y_rand))
 
         if len(bot_list) > 2:
-            pos_bot3 = self.board.cell(x_rand, self.height - 1 - y_rand)
-            pos_bot3.state = 2
-            self.positions.append(pos_bot3)
+            self.positions.append(self.board.cell(x_rand, self.height - 1 - y_rand))
 
         if len(bot_list) > 3:
-            pos_bot4 = self.board.cell(self.width - 1 - x_rand, y_rand)
-            pos_bot4.state = 1
-            self.positions.append(pos_bot4)
+            self.positions.append(self.board.cell(self.width - 1 - x_rand, y_rand))
 
         # Shuffle positions
         random.shuffle(self.positions)
@@ -123,6 +114,7 @@ class GameEngine:
 
         # Send init input to bots
         for idx in range(len(self.bot_list)):
+            self.positions[idx].state = idx
             self.bot_list[idx].get_init_input(str(len(self.bot_list)) + " " + str(idx))
 
         # Run the game
@@ -136,14 +128,20 @@ class GameEngine:
         Run a single turn for all the bots. Stopped if only one bot remains
         :return: if the game need to continue
         """
+
+        # Store old
+        old_positions = []
+        for idx_bot in range(len(self.bot_list)):
+            old_positions.append(self.positions[idx_bot])
+
         for idx_bot in range(len(self.bot_list)):
             if self.bots_alive[idx_bot]:
                 main_inputs = []
                 count_bot_alive = 0
                 for j in range(len(self.bot_list)):
                     if self.bots_alive[j]:
-                        main_inputs.append(str(self.positions[j].x) + " " +
-                                           str(self.positions[j].y) + " " +
+                        main_inputs.append(str(old_positions[j].x) + " " +
+                                           str(old_positions[j].y) + " " +
                                            str(self.positions[j].x) + " " +
                                            str(self.positions[j].y))
                         count_bot_alive += 1
