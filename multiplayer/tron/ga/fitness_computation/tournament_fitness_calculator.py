@@ -10,7 +10,8 @@ class FitnessMode(enum.Enum):
 
 class TournamentFitnessCalculator(AbstractFitnessCalculator):
 
-    def __init__(self, bot_create_function, game_engine, fitness_mode=FitnessMode.LiveDuration):
+    def __init__(self, bot_create_function, game_engine, fitness_mode=FitnessMode.LiveDuration, debug=False):
+        self.debug = debug
         self.game_engine = game_engine
         self.bot_create_function = bot_create_function
         self.fitness_mode = fitness_mode
@@ -21,18 +22,16 @@ class TournamentFitnessCalculator(AbstractFitnessCalculator):
         for individual_id in range(len(population) - 1):
             for opponent_id in range(individual_id + 1, len(population)):
                 result = self.run_match([individual_id, opponent_id], population)
+                if self.debug:
+                    print(individual_id, " against ", opponent_id, ": ", result.lives_duration)
                 if self.fitness_mode == FitnessMode.Winner:
                     if result.winner == 0:
                         score[individual_id] += 1
                     else:
                         score[opponent_id] += 1
                 if self.fitness_mode == FitnessMode.LiveDuration:
-                    if result.winner == 0:
-                        # score[individual_id] += 500
-                        score[opponent_id] += result.lives_duration[1]
-                    else:
-                        # score[opponent_id] += 500
-                        score[individual_id] += result.lives_duration[0]
+                    score[individual_id] += result.lives_duration[0]
+                    score[opponent_id] += result.lives_duration[1]
         if self.fitness_mode == FitnessMode.LiveDuration:
             for i in range(len(population)):
                 score[i] /= len(population)
