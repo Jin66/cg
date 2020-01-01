@@ -45,10 +45,10 @@ class Board:
             return None
         return self.cells[x][y]
 
-    def clean(self, id_bot):
+    def clean(self, id_bot=None):
         for i in range(self.height):
             for j in range(self.width):
-                if self.cell(j, i).state == id_bot:
+                if id_bot is None or self.cell(j, i).state == id_bot:
                     self.cell(j, i).state = -1
 
     def print(self):
@@ -85,6 +85,7 @@ class GameEngine:
             :return: game results
         """
 
+        self.board.clean()
         self.moves.clear()
         self.positions = []
         self.bot_list = bot_list

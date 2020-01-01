@@ -1,13 +1,4 @@
-import enum
-
 from multiplayer.tron.bots.abstract_bot import AbstractBot
-
-
-class InputMode(enum.Enum):
-    DistanceSquare = 1
-    DistanceDiag = 2
-    AccessibleCells = 3
-    BotsPosition = 4
 
 
 class Board:

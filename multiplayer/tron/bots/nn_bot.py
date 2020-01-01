@@ -1,8 +1,9 @@
+import enum
 from typing import List
 
-from multiplayer.tron.bots.abstract_bot import AbstractBot
 import numpy as np
-import enum
+
+from multiplayer.tron.bots.abstract_bot import AbstractBot
 
 
 class InputMode(enum.Enum):
@@ -16,15 +17,17 @@ class Board:
     width = 0
     height = 0
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, manage_neighbors=True):
         self.width = width
         self.height = height
+        self.manage_neighbors = manage_neighbors
         self.cells = [-1 for i in range(width * height)]
 
         self.neighbors = {}
-        for i in range(self.height):
-            for j in range(self.width):
-                self.neighbors[tuple([j, i])] = self.accessible_neighbors([j, i])
+        if self.manage_neighbors:
+            for i in range(self.height):
+                for j in range(self.width):
+                    self.neighbors[tuple([j, i])] = self.accessible_neighbors([j, i])
 
     def cell(self, x, y):
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
@@ -44,8 +47,9 @@ class Board:
                 if self.cell(j, i) == id_bot:
                     self.set_cell(j, i, -1)
                     cells.append(tuple([j, i]))
-        for cell in cells:
-            self.update_accessible_neighbors(cell)
+        if self.manage_neighbors:
+            for cell in cells:
+                self.update_accessible_neighbors(cell)
 
     def distances_limit(self, pos, move):
         dx, dy = move
@@ -125,7 +129,7 @@ class NNBot(AbstractBot):
     input_modes: List[InputMode] = []
 
     def __init__(self, weights=None, can_lose_stupidly=False, input_modes=None):
-        self.board = Board(self.width, self.height)
+        self.board = Board(self.width, self.height, InputMode.AccessibleCells in input_modes)
         self.positions = []
         self.my_id = 0
         self.can_lose_stupidly = can_lose_stupidly
@@ -179,7 +183,8 @@ class NNBot(AbstractBot):
                 y1 = int(y1)
                 self.positions[line_number] = [x1, y1]
                 self.board.set_cell(x1, y1, line_number)
-                self.board.update_accessible_neighbors(tuple([x1, y1]))
+                if InputMode.AccessibleCells in self.input_modes:
+                    self.board.update_accessible_neighbors(tuple([x1, y1]))
             line_number += 1
         self.turn += 1
 
@@ -190,21 +195,21 @@ class NNBot(AbstractBot):
         input_array = []
 
         # Distance square
-        if self.input_modes.__contains__(InputMode.DistanceSquare):
+        if InputMode.DistanceSquare in self.input_modes:
             input_array.append(self.board.distances_limit(my_position, [1, 0]))
             input_array.append(self.board.distances_limit(my_position, [0, 1]))
             input_array.append(self.board.distances_limit(my_position, [-1, 0]))
             input_array.append(self.board.distances_limit(my_position, [0, -1]))
 
         # Distance diag
-        if self.input_modes.__contains__(InputMode.DistanceDiag):
+        if InputMode.DistanceDiag in self.input_modes:
             input_array.append(self.board.distances_limit(my_position, [1, -1]))
             input_array.append(self.board.distances_limit(my_position, [1, 1]))
             input_array.append(self.board.distances_limit(my_position, [-1, 1]))
             input_array.append(self.board.distances_limit(my_position, [-1, -1]))
 
         # Number of accessible cells
-        if self.input_modes.__contains__(InputMode.AccessibleCells):
+        if InputMode.AccessibleCells in self.input_modes:
             closed_set_left = []
             closed_set_right = []
             closed_set_up = []
@@ -241,7 +246,7 @@ class NNBot(AbstractBot):
             input_array.append(len(closed_set_down) / 100)
             input_array.append(len(closed_set_up) / 100)
 
-        if self.input_modes.__contains__(InputMode.BotsPosition):
+        if InputMode.BotsPosition in self.input_modes:
             input_array.append(my_position[0])
             input_array.append(my_position[1])
             for i, position in enumerate(self.positions):
