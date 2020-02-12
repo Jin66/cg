@@ -1,10 +1,18 @@
+import cProfile
+import io
+import pstats
+
 import numpy as np
 
 from multiplayer.tron.bots.basic_bot import BasicBot
+from multiplayer.tron.bots.graph_bot import GraphBot
 from multiplayer.tron.bots.nn_bot import NNBot, InputMode
+from multiplayer.tron.bots.smart_bot import SmartBot
 from multiplayer.tron.engine import GameEngine
 
 if __name__ == '__main__':
+    pr = cProfile.Profile()
+    pr.enable()
 
     w1 = np.array(
         [2.85279164, 1.93618624, 1.0547554, 1.39014364, - 4.56926338, 2.39373373,
@@ -38,8 +46,22 @@ if __name__ == '__main__':
     botRandom2 = NNBot(can_lose_stupidly=True,
                        input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.BotsPosition])
 
-    number_games = 2
+    number_games = 1
+    width = 30
+    height = 20
+    winner = [0, 0]
+    seed = None
     for i in range(number_games):
-        game_engine = GameEngine(debug=True)
-        results = game_engine.run([BasicBot(), BasicBot(), BasicBot(), BasicBot()])
-        print(results)
+        game_engine = GameEngine(debug=False, width=width, height=height)
+        results = game_engine.run(
+            [BasicBot(width=width, height=height), GraphBot(width=width, height=height)], seed=seed)
+        print("Match", i, results)
+        winner[results.winner] += 1
+
+    print(winner)
+
+    pr.disable()
+    # s = io.StringIO()
+    # ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    # ps.print_stats()
+    # print(s.getvalue())

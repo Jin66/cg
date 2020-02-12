@@ -64,26 +64,29 @@ class Board:
 
 
 class GameEngine:
-    width = 30
-    height = 20
-    bot_list = []
-    positions = []
-    bots_alive = []
-    bots_live_duration = []
-    board = None
 
-    debug = False
-
-    def __init__(self, debug=False):
-        self.moves = []
-        self.board = Board(self.width, self.height)
+    def __init__(self, debug=False, width=30, height=20):
+        self.height = height
+        self.width = width
         self.debug = debug
 
-    def run(self, bot_list):
+        self.moves = []
+        self.board = Board(self.width, self.height)
+        self.bot_list = []
+        self.positions = []
+        self.bots_alive = []
+        self.bots_live_duration = []
+
+    def run(self, bot_list: object, seed=None) -> object:
         """
-            Run a complete game for all the bots sent. Stopped when only one bot remains
+            Run a complete game for all the bots. Stopped when only one bot remains
             :return: game results
         """
+
+        if seed is None :
+            seed = random.randrange(10000000)
+        random.seed(a=seed)
+        print("Seed is:", seed)
 
         self.board.clean()
         self.moves.clear()

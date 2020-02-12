@@ -106,21 +106,11 @@ class Board:
 
         return closed_set
 
-    @staticmethod
-    def build_path(position, came_from):
-        path = [position]
-        current = position
-        while current in came_from.keys():
-            current = came_from[current]
-            path.append(current)
-        return path
-
-
 class BasicBot(AbstractBot):
-    width = 30
-    height = 20
 
-    def __init__(self):
+    def __init__(self, width=30, height=20):
+        self.width = width
+        self.height = height
         self.board = Board(self.width, self.height)
         self.positions = []
         self.my_id = 0
