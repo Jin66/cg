@@ -319,7 +319,8 @@ class BoardTreeNode:
 class GraphBot(AbstractBot):
     max_depth = 3
 
-    def __init__(self, width=30, height=20):
+    def __init__(self, width=30, height=20, depth=1):
+        self.depth = depth
         self.board = Board(width=width, height=height)
         self.my_id = 0
         self.nb_players = 2  # Default
@@ -400,58 +401,16 @@ class GraphBot(AbstractBot):
                     best_score = score
                     best_move = move
         else:
-            # TODO: Create min-max tree with criteria  min distance to all cells / most cells accessible first.
-            # Basic 0-depth method
-            moves = self.board.get_legal_moves(self.my_id)
-            max_score = -10000
-            for move in moves:
-                current_board = Board(board=self.board)
-                current_board.set_bot_position_by_idx(self.my_id, move)
-                # current_board.print()
-
-                # Compute opponent distances
-                distance_to_all_cells = {}
-                for bot_id in range(self.nb_players):
-                    distance_to_all_cells[bot_id] = current_board.distance_all_accessible_cells(
-                        current_board.bots[bot_id])
-                #  print("Distance", distance_to_all_cells)
-                bot_closest_to_cell = [0] * self.nb_players
-                for idx_cell in range(self.board.width * self.board.height):
-                    best_bot = None
-                    min_distance = 1000
-                    for bot_id in range(self.nb_players):
-                        if idx_cell in distance_to_all_cells[bot_id]:
-                            distance = distance_to_all_cells[bot_id][idx_cell]
-                            if distance == min_distance:
-                                best_bot = None
-                            elif distance < min_distance:
-                                best_bot = bot_id
-                                min_distance = distance
-                    if best_bot is not None:
-                        # print("Closest bot for ", idx_cell, ":", best_bot, min_distance)
-                        bot_closest_to_cell[best_bot] += 1
-                # print("Move", move, "closest cells", bot_closest_to_cell)
-
-                score = 0
-                for bot_id in range(self.nb_players):
-                    if bot_id == self.my_id:
-                        continue
-                    score += bot_closest_to_cell[self.my_id] - bot_closest_to_cell[bot_id]
-                if score > max_score:
-                    max_score = score
-                    best_move = move
-        print("Best move for 1-depth search: ", best_move)
-
-        tree_node = BoardTreeNode(self.my_id, self.bots_cycle, board=self.board)
-        tree_node.alpha_beta(-math.inf, math.inf, 3, self.my_id)
-        print("Resultats alpha_beta : ")
-        max_score = -math.inf
-        for children in tree_node.children:
-            print(children.move, " :", children.score)
-            if children.score > max_score:
-                max_score = children.score
-                best_move = children.move
-        print("Best move for 3-depth search: ", best_move)
+            tree_node = BoardTreeNode(self.my_id, self.bots_cycle, board=self.board)
+            tree_node.alpha_beta(-math.inf, math.inf, self.depth, self.my_id)
+            print("Resultats alpha_beta : ")
+            max_score = -math.inf
+            for children in tree_node.children:
+                print(children.move, " :", children.score)
+                if children.score >= max_score:
+                    max_score = children.score
+                    best_move = children.move
+            print("Best move for alpha beta (", self.depth, ") search: ", best_move)
 
         print("Best move: ", best_move)
         best_move_pos = self.board.idx_to_pos(best_move)
