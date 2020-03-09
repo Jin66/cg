@@ -188,79 +188,104 @@ class Board:
 
 
 class BoardTreeNode:
-    score_win_lose = 1000
-
-    def __init__(self, bot_id, bots_cycle, move=None, board=None):
+    def __init__(self, bot_id, bots_cycle, board=None, move=None):
         self.bots_cycle = bots_cycle
         self.bot_id = bot_id
-        self.move = move
         self.board = board
+        self.move = move
         self.children = []
+        self.score = - math.inf
 
     def alpha_beta(self, alpha, beta, depth, bot_2_max):
         if depth == 0:
-            print("Evaluate node for ", self.bot_id, "move", self.move)
+            print("Evaluate node for ", self.bot_id, "with move", self.move)
+            # self.board.print()
             score = self._evaluate(bot_2_max)
+            print("Score ", score)
+            self.score = score
             return score
         if self.bot_id == bot_2_max:
-            print("My bot node for ", self.move)
+            print("My bot node", self.move)
+            # self.board.print()
             legal_moves = self.board.get_legal_moves(self.bot_id)
             if not legal_moves:
-                return - self.score_win_lose
+                self.score = - math.inf
+                print("Score for ", self.move, ":", self.score, "no player moves")
+                return self.score
             for move in legal_moves:
                 next_board = Board(board=self.board)
                 next_board.set_bot_position_by_idx(self.bot_id, move)
-                next_node = BoardTreeNode(self.bot_id, self.bots_cycle, move, next_board)
+                next_node = BoardTreeNode(-1, self.bots_cycle, next_board, move)
                 self.children.append(next_node)
-            min_score = math.inf
-            for children in self.children:
-                min_score = min(min_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
-                if min_score < alpha:
-                    return min_score
-                beta = min(beta, min_score)
-        else:
-            print("Opp bot node for ", self.move)
-            # Create the children with all combinations of opponent moves in one go
-            self.children.extend(self._build_opp_children_nodes())
-            if not self.children:
-                return self.score_win_lose
+            print("All children built (", len(self.children), ")")
+            # for children in self.children:
+            #    children.board.print()
             max_score = - math.inf
             for children in self.children:
                 max_score = max(max_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
                 if max_score > beta:
-                    return max_score
+                    self.score = max_score
+                    print("Score for ", self.move, ":", self.score)
+                    return self.score
                 alpha = max(alpha, max_score)
+            self.score = max_score
+            print("Score for ", self.move, ":", self.score)
+            return max_score
 
-    def _build_opp_children_nodes(self):
+        else:
+            print("Opp bot node for ", self.move)
+            # self.board.print()
+            # Create the children with all combinations of opponent moves in one go
+            self.children.extend(self._build_opp_children_nodes(bot_2_max))
+            if not self.children:
+                self.score = math.inf
+                print("Score for ", self.move, ":", self.score, "no opp moves")
+                return self.score
+
+            min_score = math.inf
+            for children in self.children:
+                min_score = min(min_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
+                if min_score < alpha:
+                    self.score = min_score
+                    print("Score for ", self.move, ":", self.score)
+                    return min_score
+                beta = min(beta, min_score)
+            self.score = min_score
+            print("Score for ", self.move, ":", self.score)
+            return min_score
+
+    def _build_opp_children_nodes(self, bot_2_max):
         current_children = []
         for opp_bot_id in self.bots_cycle:
-            if not self.board.bots_alive[opp_bot_id]:
+            if opp_bot_id == bot_2_max or not self.board.bots_alive[opp_bot_id]:
                 continue
             legal_moves = self.board.get_legal_moves(opp_bot_id)
             if not legal_moves:
                 self.board.clean_bot(opp_bot_id)
             else:
-                if current_children:  # for each children, create node for all move
+                if current_children:  # for each children, create grandchildren for all legal moves
                     new_children = []
                     for children in current_children:
                         for move in legal_moves:
                             next_board = Board(board=children.board)
                             next_board.set_bot_position_by_idx(opp_bot_id, move)
-                            next_node = BoardTreeNode(opp_bot_id, self.bots_cycle, move, next_board)
+                            next_node = BoardTreeNode(bot_2_max, self.bots_cycle, board=next_board)
                             new_children.append(next_node)
                     current_children = new_children
                 else:
                     for move in legal_moves:
                         next_board = Board(board=self.board)
                         next_board.set_bot_position_by_idx(opp_bot_id, move)
-                        next_node = BoardTreeNode(opp_bot_id, self.bots_cycle, move, next_board)
+                        next_node = BoardTreeNode(bot_2_max, self.bots_cycle, board=next_board)
                         current_children.append(next_node)
+        print("All children built (", len(current_children), ")")
+        # for children in current_children:
+        #     children.board.print()
         return current_children
 
     def _evaluate(self, bot_2_max):
-        # Compute opponent distances
         distance_to_all_cells = {}
-        bot_closest_to_cell = []
+        bot_closest_to_cell = {}
         for bot_id, bot_pos in self.board.bots.items():
             distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
             bot_closest_to_cell[bot_id] = 0
@@ -277,9 +302,9 @@ class BoardTreeNode:
                         best_bot = bot_id
                         min_distance = distance
             if best_bot is not None:
-                # print("Closest bot for ", idx_cell, ":", best_bot, min_distance)
+                # print("Closest bot for ", idx_cell, ":", best_bot, "( dist:", min_distance, " )")
                 bot_closest_to_cell[best_bot] += 1
-
+        print(bot_closest_to_cell)
         score = 0
         for bot_id in self.board.bots:
             if bot_id == bot_2_max:
@@ -415,9 +440,18 @@ class GraphBot(AbstractBot):
                 if score > max_score:
                     max_score = score
                     best_move = move
+        print("Best move for 1-depth search: ", best_move)
 
         tree_node = BoardTreeNode(self.my_id, self.bots_cycle, board=self.board)
-        tree_node.alpha_beta(-math.inf, math.inf, 1, self.my_id)
+        tree_node.alpha_beta(-math.inf, math.inf, 3, self.my_id)
+        print("Resultats alpha_beta : ")
+        max_score = -math.inf
+        for children in tree_node.children:
+            print(children.move, " :", children.score)
+            if children.score > max_score:
+                max_score = children.score
+                best_move = children.move
+        print("Best move for 3-depth search: ", best_move)
 
         print("Best move: ", best_move)
         best_move_pos = self.board.idx_to_pos(best_move)
