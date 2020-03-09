@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     # Execute a simple game
     game_engine = GameEngine(debug=False, width=width, height=height)
-    results = game_engine.run([BasicBot(width=width, height=height), GraphBot(width=width, height=height)])
+    results = game_engine.run([BasicBot(width=width, height=height), GraphBot(width=width, height=height), BasicBot(width=width, height=height), BasicBot(width=width, height=height)])
     print(results)
 
     # Display the game on TV !

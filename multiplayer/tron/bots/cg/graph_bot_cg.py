@@ -1,11 +1,6 @@
-import math
+import sys
 from queue import SimpleQueue
 
-from multiplayer.tron.bots.abstract_bot import AbstractBot
-
-
-#  TODO: refactoring, extract the Game class from the Board,
-#   it should only store the state and not implements the game logic
 
 class Board:
 
@@ -14,8 +9,7 @@ class Board:
             self.height = height
             self.width = width
             self.bots = {}
-            self.bots_alive = {}
-            self.cells = [-1] * (self.width * self.height)
+            self.cells = [-1 for i in range(self.width * self.height)]
             self.adjacent_cells = []
             for idx in range(self.height * self.width):
                 self.adjacent_cells.append(self._accessible_neighbors(idx))
@@ -23,7 +17,6 @@ class Board:
             self.height = board.height
             self.width = board.width
             self.bots = board.bots.copy()
-            self.bots_alive = board.bots_alive.copy()
             self.cells = board.cells.copy()
             self.adjacent_cells = []
             for idx in range(self.height * self.width):
@@ -74,7 +67,6 @@ class Board:
     def set_bot_position_by_idx(self, bot_id, idx_pos):
         self.cells[idx_pos] = bot_id
         self.bots[bot_id] = idx_pos
-        self.bots_alive[bot_id] = True
         self.update_adjacency_graph(idx_pos)
         self.components_map.clear()
         self.components.clear()
@@ -84,7 +76,6 @@ class Board:
         return self.adjacent_cells[self.bots[bot_id]]
 
     def clean_bot(self, id_bot):
-        self.bots_alive[id_bot] = False
         cells_idx = []
         for idx in range(self.height * self.width):
             if self.cells[idx] == id_bot:
@@ -187,111 +178,7 @@ class Board:
         return bots_possible_components
 
 
-class BoardTreeNode:
-    score_win_lose = 1000
-
-    def __init__(self, bot_id, bots_cycle, move=None, board=None):
-        self.bots_cycle = bots_cycle
-        self.bot_id = bot_id
-        self.move = move
-        self.board = board
-        self.children = []
-
-    def alpha_beta(self, alpha, beta, depth, bot_2_max):
-        if depth == 0:
-            print("Evaluate node for ", self.bot_id, "move", self.move)
-            score = self._evaluate(bot_2_max)
-            return score
-        if self.bot_id == bot_2_max:
-            print("My bot node for ", self.move)
-            legal_moves = self.board.get_legal_moves(self.bot_id)
-            if not legal_moves:
-                return - self.score_win_lose
-            for move in legal_moves:
-                next_board = Board(board=self.board)
-                next_board.set_bot_position_by_idx(self.bot_id, move)
-                next_node = BoardTreeNode(self.bot_id, self.bots_cycle, move, next_board)
-                self.children.append(next_node)
-            min_score = math.inf
-            for children in self.children:
-                min_score = min(min_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
-                if min_score < alpha:
-                    return min_score
-                beta = min(beta, min_score)
-        else:
-            print("Opp bot node for ", self.move)
-            # Create the children with all combinations of opponent moves in one go
-            self.children.extend(self._build_opp_children_nodes())
-            if not self.children:
-                return self.score_win_lose
-            max_score = - math.inf
-            for children in self.children:
-                max_score = max(max_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
-                if max_score > beta:
-                    return max_score
-                alpha = max(alpha, max_score)
-
-    def _build_opp_children_nodes(self):
-        current_children = []
-        for opp_bot_id in self.bots_cycle:
-            if not self.board.bots_alive[opp_bot_id]:
-                continue
-            legal_moves = self.board.get_legal_moves(opp_bot_id)
-            if not legal_moves:
-                self.board.clean_bot(opp_bot_id)
-            else:
-                if current_children:  # for each children, create node for all move
-                    new_children = []
-                    for children in current_children:
-                        for move in legal_moves:
-                            next_board = Board(board=children.board)
-                            next_board.set_bot_position_by_idx(opp_bot_id, move)
-                            next_node = BoardTreeNode(opp_bot_id, self.bots_cycle, move, next_board)
-                            new_children.append(next_node)
-                    current_children = new_children
-                else:
-                    for move in legal_moves:
-                        next_board = Board(board=self.board)
-                        next_board.set_bot_position_by_idx(opp_bot_id, move)
-                        next_node = BoardTreeNode(opp_bot_id, self.bots_cycle, move, next_board)
-                        current_children.append(next_node)
-        return current_children
-
-    def _evaluate(self, bot_2_max):
-        # Compute opponent distances
-        distance_to_all_cells = {}
-        bot_closest_to_cell = []
-        for bot_id, bot_pos in self.board.bots.items():
-            distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
-            bot_closest_to_cell[bot_id] = 0
-
-        for idx_cell in range(self.board.width * self.board.height):
-            best_bot = None
-            min_distance = 1000
-            for bot_id in self.board.bots:
-                if idx_cell in distance_to_all_cells[bot_id]:
-                    distance = distance_to_all_cells[bot_id][idx_cell]
-                    if distance == min_distance:
-                        best_bot = None
-                    elif distance < min_distance:
-                        best_bot = bot_id
-                        min_distance = distance
-            if best_bot is not None:
-                # print("Closest bot for ", idx_cell, ":", best_bot, min_distance)
-                bot_closest_to_cell[best_bot] += 1
-
-        score = 0
-        for bot_id in self.board.bots:
-            if bot_id == bot_2_max:
-                continue
-            score += bot_closest_to_cell[bot_2_max] - bot_closest_to_cell[bot_id]
-        return score
-
-    def _next_bot_id(self, current_bot_id):
-        return current_bot_id + 1 if current_bot_id + 1 < len(self.bots_cycle) else 0
-
-
-class GraphBot(AbstractBot):
+class GraphBot:
     max_depth = 3
 
     def __init__(self, width=30, height=20):
@@ -304,8 +191,8 @@ class GraphBot(AbstractBot):
     def get_init_input(self, init):
         nb_players_str, my_id_str = init.split()
         self.nb_players = int(nb_players_str)
+        self.bots_cycle = [i for i in range(self.nb_players)]
         self.my_id = int(my_id_str)
-        self.bots_cycle = [i for i in range(self.nb_players) if i != self.my_id]
 
     def get_main_input(self, main_lines):
         line_number = 0
@@ -350,7 +237,7 @@ class GraphBot(AbstractBot):
 
         print("Am I alone ? ", is_alone)
         print("My components  ", my_components)
-        best_move = None
+        best_move = self.board.bots[self.my_id]
         if len(my_components) == 0:
             print("No more room to move ! ")
             best_move = -1  # Let's die
@@ -376,6 +263,7 @@ class GraphBot(AbstractBot):
                     best_move = move
         else:
             # TODO: Create min-max tree with criteria  min distance to all cells / most cells accessible first.
+
             # Basic 0-depth method
             moves = self.board.get_legal_moves(self.my_id)
             max_score = -10000
@@ -390,7 +278,7 @@ class GraphBot(AbstractBot):
                     distance_to_all_cells[bot_id] = current_board.distance_all_accessible_cells(
                         current_board.bots[bot_id])
                 #  print("Distance", distance_to_all_cells)
-                bot_closest_to_cell = [0] * self.nb_players
+                bot_closest_to_cell = [0 for bot_id in range(self.nb_players)]
                 for idx_cell in range(self.board.width * self.board.height):
                     best_bot = None
                     min_distance = 1000
@@ -405,7 +293,7 @@ class GraphBot(AbstractBot):
                     if best_bot is not None:
                         # print("Closest bot for ", idx_cell, ":", best_bot, min_distance)
                         bot_closest_to_cell[best_bot] += 1
-                # print("Move", move, "closest cells", bot_closest_to_cell)
+                print("Move", move, "closest cells", bot_closest_to_cell)
 
                 score = 0
                 for bot_id in range(self.nb_players):
@@ -415,9 +303,6 @@ class GraphBot(AbstractBot):
                 if score > max_score:
                     max_score = score
                     best_move = move
-
-        tree_node = BoardTreeNode(self.my_id, self.bots_cycle, board=self.board)
-        tree_node.alpha_beta(-math.inf, math.inf, 1, self.my_id)
 
         print("Best move: ", best_move)
         best_move_pos = self.board.idx_to_pos(best_move)
@@ -434,3 +319,24 @@ class GraphBot(AbstractBot):
 
     def _previous_bot_id(self, current_bot_id):
         return current_bot_id - 1 if current_bot_id - 1 >= 0 else self.bots_cycle[-1]
+
+
+bot = None
+turn = 0
+# Game loop
+while True:
+
+    if turn == 0:
+        bot = GraphBot()
+        bot.get_init_input(input())
+    else:
+        input()
+
+    main_inputs = []
+    for i in range(bot.nb_players):
+        main_inputs.append(input())
+    print("Main inputs:", main_inputs, file=sys.stderr)
+    bot.get_main_input(main_inputs)
+
+    print(bot.get_next_play())
+    turn += 1
