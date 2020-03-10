@@ -52,7 +52,7 @@ class Board:
         for neighbor in self._accessible_neighbors(idx_pos):
             if self.cells[idx_pos] != -1 and idx_pos in self.adjacent_cells[neighbor]:
                 self.adjacent_cells[neighbor].remove(idx_pos)
-            elif idx_pos not in self.adjacent_cells[neighbor]:
+            elif self.cells[idx_pos] == -1 and idx_pos not in self.adjacent_cells[neighbor]:
                 self.adjacent_cells[neighbor].append(idx_pos)
 
     def idx_to_pos(self, idx_pos):
@@ -181,7 +181,12 @@ class Board:
         bots_possible_components = {}
         for bot_id, _ in enumerate(self.bots):
             bots_possible_components[bot_id] = {}
-            for move in self.get_legal_moves(bot_id):
+            legal_moves = self.get_legal_moves(bot_id)
+            for move in legal_moves:
+                try:
+                    comp = self.components_map[move]
+                except KeyError as e:
+                    print('I got a KeyError - reason "%s"' % str(e))
                 if self.components_map[move] not in bots_possible_components[bot_id]:
                     bots_possible_components[bot_id][self.components_map[move]] = []
                 bots_possible_components[bot_id][self.components_map[move]].append(move)

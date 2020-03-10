@@ -18,7 +18,7 @@ if __name__ == '__main__':
     game_engine = GameEngine(debug=False, width=width, height=height)
     results = game_engine.run(
         [GraphBot(width=width, height=height, depth=1),
-         GraphBot(width=width, height=height, depth=6)
+         GraphBot(width=width, height=height, depth=3)
          ], seed=seed)
     print(results)
 
