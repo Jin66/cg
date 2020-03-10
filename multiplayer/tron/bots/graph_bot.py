@@ -199,26 +199,26 @@ class GameTreeNode:
 
     def alpha_beta(self, alpha, beta, depth, bot_2_max):
         if depth == 0:
-            print("Evaluate node for ", self.bot_id, "with move", self.move)
+            logging.debug("Evaluate node for %s with move %s", self.bot_id, self.move)
             self.board.print()
             score = self._evaluate(bot_2_max)
-            print("Score ", score)
+            logging.debug("Score %s", score)
             self.score = score
             return score
         if self.bot_id == bot_2_max:
-            print("My bot node", self.move)
+            logging.debug("My bot node %s", self.move)
             # self.board.print()
             legal_moves = self.board.get_legal_moves(self.bot_id)
             if not legal_moves:
                 self.score = - math.inf
-                print("Score for ", self.move, ":", self.score, "no player moves")
+                logging.debug("Score for %s: %s no player moves", self.move, self.score)
                 return self.score
             for move in legal_moves:
                 next_board = Board(board=self.board)
                 next_board.set_bot_position_by_idx(self.bot_id, move)
                 next_node = GameTreeNode(-1, self.bots_cycle, next_board, move)
                 self.children.append(next_node)
-            print("All children built (", len(self.children), ")")
+            logging.debug("All children built (%s)", len(self.children))
             for children in self.children:
                 children.board.print()
             max_score = - math.inf
@@ -226,21 +226,21 @@ class GameTreeNode:
                 max_score = max(max_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
                 if max_score > beta:
                     self.score = max_score
-                    print("Score for ", self.move, ":", self.score)
+                    logging.debug("Score for %s: %s", self.move, self.score)
                     return self.score
                 alpha = max(alpha, max_score)
             self.score = max_score
-            print("Score for ", self.move, ":", self.score)
+            logging.debug("Score for %s: %s", self.move, self.score)
             return max_score
 
         else:
-            print("Opp bot node for ", self.move)
+            logging.debug("Opp bot node for %s", self.move)
             self.board.print()
             # Create the children with all combinations of opponent moves in one go
             self.children.extend(self._build_opp_children_nodes(bot_2_max))
             if not self.children:
                 self.score = math.inf
-                print("Score for ", self.move, ":", self.score, "no opp moves")
+                logging.debug("Score for %s: %s no opp moves", self.move, self.score)
                 return self.score
 
             min_score = math.inf
@@ -248,11 +248,11 @@ class GameTreeNode:
                 min_score = min(min_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
                 if min_score < alpha:
                     self.score = min_score
-                    print("Score for ", self.move, ":", self.score)
+                    logging.debug("Score for %s: %s", self.move, self.score)
                     return min_score
                 beta = min(beta, min_score)
             self.score = min_score
-            print("Score for ", self.move, ":", self.score)
+            logging.debug("Score for %s: %s", self.move, self.score)
             return min_score
 
     def _build_opp_children_nodes(self, bot_2_max):
@@ -264,7 +264,8 @@ class GameTreeNode:
             if not legal_moves:
                 self.board.clean_bot(opp_bot_id)
             else:
-                if current_children:  # for each children, create grandchildren for all legal moves
+                if current_children:
+                    # for each children, create grandchildren for all legal moves
                     new_children = []
                     for children in current_children:
                         for move in legal_moves:
@@ -279,19 +280,18 @@ class GameTreeNode:
                         next_board.set_bot_position_by_idx(opp_bot_id, move)
                         next_node = GameTreeNode(bot_2_max, self.bots_cycle, board=next_board)
                         current_children.append(next_node)
-        print("All children built (", len(current_children), ")")
-        # for children in current_children:
-        #     children.board.print()
+        logging.debug("All children built (%s)", len(current_children))
+        for children in current_children:
+            children.board.print()
         return current_children
 
     def _evaluate(self, bot_2_max):
         distance_to_all_cells = {}
         bot_closest_to_cell = {}
         for bot_id, bot_pos in self.board.bots.items():
-            #  {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
+            # To sort if necessary {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
             distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
             bot_closest_to_cell[bot_id] = 0
-        # print(distance_to_all_cells)
         for idx_cell in range(self.board.width * self.board.height):
             best_bot = None
             min_distance = 1000
@@ -304,18 +304,14 @@ class GameTreeNode:
                         best_bot = bot_id
                         min_distance = distance
             if best_bot is not None:
-                # print("Closest bot for ", idx_cell, ":", best_bot, "( dist:", min_distance, " )")
                 bot_closest_to_cell[best_bot] += 1
-        print(bot_closest_to_cell)
+        logging.debug("Bots closest to a given cell %s", bot_closest_to_cell)
         score = 0
         for bot_id in self.board.bots:
             if bot_id == bot_2_max:
                 continue
             score += bot_closest_to_cell[bot_2_max] - bot_closest_to_cell[bot_id]
         return score
-
-    def _next_bot_id(self, current_bot_id):
-        return current_bot_id + 1 if current_bot_id + 1 < len(self.bots_cycle) else 0
 
 
 class GraphBot(AbstractBot):
