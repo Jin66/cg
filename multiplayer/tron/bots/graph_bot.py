@@ -1,4 +1,5 @@
 import math
+import logging
 from queue import SimpleQueue
 
 from multiplayer.tron.bots.abstract_bot import AbstractBot
@@ -93,7 +94,7 @@ class Board:
         for cell_idx in cells_idx:
             self.update_adjacency_graph(cell_idx)
 
-    def print(self):
+    def print(self, level=logging.DEBUG):
         output = ""
         for i in range(self.height):
             for j in range(self.width):
@@ -102,7 +103,7 @@ class Board:
                 else:
                     output += str(self.cell(j, i))
             output += "\n"
-        print(output)
+        logging.log(level, output)
 
     def compute_graph_components(self):
         for idx in range(self.height * self.width):
@@ -321,8 +322,8 @@ class GraphBot(AbstractBot):
     max_depth = 3
 
     def __init__(self, width=30, height=20, depth=1):
-        self.depth = depth
         self.board = Board(width=width, height=height)
+        self.depth = depth
         self.my_id = 0
         self.nb_players = 2  # Default
         self.bots_cycle = [0, 1]
@@ -350,22 +351,67 @@ class GraphBot(AbstractBot):
         self.turn += 1
 
     def get_next_play(self):
-        self.board.print()
+        logging.info("Bot playing %s", self.my_id)
+        self.board.print(logging.DEBUG)
+
+        # Compute graph indicators / structural elements
         self.board.compute_all_articulation_points_and_components()
-        # print("Comp", self.board.components)
-        # print("Comp Map", self.board.components_map)
-        # print("Articulation", self.board.articulation_points)
+        logging.debug("Component: %s", self.board.components)
+        logging.debug("Components map: %s", self.board.components_map)
+        logging.debug("Articulation: %s", self.board.articulation_points)
 
-        # Simple mecanism for now :
-        # 1. If in a separate component than the opponents : space filling.
-        # 2. Else, take the move that decrease the most the distance to all tiles
-
+        # Computes bots components
         bot_possible_components = self.board.compute_bot_possible_components()
-        # print(bot_possible_components)
+        bots_components = self._bots_components(bot_possible_components)
+
+        # I am alone ?
+        alone = self.__am_i_alone(bots_components)
+        logging.info("Am I alone ? %s", alone)
+
+        # Find the best move !
+        my_components = bots_components[self.my_id]
+        logging.debug("My components: %s ", my_components)
+        best_move = None
+        if len(my_components) == 0:
+            logging.info("No more room to move !")
+            best_move = -1
+        elif alone:
+            best_move = self._get_space_filling_move(my_components, bot_possible_components)
+        else:
+            root_game_node = GameTreeNode(self.my_id, self.bots_cycle, board=self.board)
+            root_game_node.alpha_beta(-math.inf, math.inf, self.depth, self.my_id)
+            logging.info("Results alpha beta search : ")
+            max_score = -math.inf
+            for children in root_game_node.children:
+                logging.info("%s: %s", children.move, children.score)
+                if children.score >= max_score:
+                    max_score = children.score
+                    best_move = children.move
+            logging.info("Best move alpha beta (depth:%s) search: %s", self.depth, best_move)
+
+        # Move
+        best_move_pos = self.board.idx_to_pos(best_move)
+        my_position = self.board.idx_to_pos(self.board.bots[self.my_id])
+        move_direction = None
+        if best_move_pos[0] < my_position[0]:
+            move_direction = "LEFT"
+        if best_move_pos[0] > my_position[0]:
+            move_direction = "RIGHT"
+        if best_move_pos[1] < my_position[1]:
+            move_direction = "UP"
+        if best_move_pos[1] > my_position[1]:
+            move_direction = "DOWN"
+        logging.info("Choose to move %s (%s)", move_direction, best_move)
+        return move_direction
+
+    def _bots_components(self, bot_possible_components):
         bots_components = {idx: set() for idx in range(self.nb_players)}
         for bot_id, components_by_move in bot_possible_components.items():
             bots_components[bot_id].update(components_by_move.keys())
+        logging.debug("Bots components: %s", bots_components)
+        return bots_components
 
+    def __am_i_alone(self, bots_components):
         is_alone = True
         my_components = bots_components[self.my_id]
         for bot_id, components in bots_components.items():
@@ -374,54 +420,29 @@ class GraphBot(AbstractBot):
             if not my_components.isdisjoint(components):
                 is_alone = False
                 break
+        return is_alone
 
-        print("Am I alone ? ", is_alone)
-        # print("My components  ", my_components)
+    def _get_space_filling_move(self, my_components, bot_possible_components):
         best_move = None
-        if len(my_components) == 0:
-            print("No more room to move ! ")
-            best_move = -1  # Let's die
-        elif is_alone:
-            # If several components available, find the biggest one to explore
-            best_component = next(iter(my_components))
-            if len(my_components) > 1:
-                max_size = 0
-                for idx_component in my_components:
-                    size = len(self.board.components[idx_component])
-                    if size > max_size:
-                        max_size = size
-                        best_component = idx_component
-            moves = bot_possible_components[self.my_id][best_component]
 
-            print(moves)
-            best_score = -100
-            for move in moves:
-                score = 5 - len(self.board.adjacent_cells[move])
-                score -= 10 if move in self.board.articulation_points else 0
-                if score > best_score:
-                    best_score = score
-                    best_move = move
-        else:
-            tree_node = GameTreeNode(self.my_id, self.bots_cycle, board=self.board)
-            tree_node.alpha_beta(-math.inf, math.inf, self.depth, self.my_id)
-            print("Resultats alpha_beta : ")
-            max_score = -math.inf
-            for children in tree_node.children:
-                print(children.move, " :", children.score)
-                if children.score >= max_score:
-                    max_score = children.score
-                    best_move = children.move
-            print("Best move for alpha beta (", self.depth, ") search: ", best_move)
+        # If several components available, find the biggest one to explore
+        best_component = next(iter(my_components))
+        if len(my_components) > 1:
+            max_size = 0
+            for idx_component in my_components:
+                size = len(self.board.components[idx_component])
+                if size > max_size:
+                    max_size = size
+                    best_component = idx_component
+        moves = bot_possible_components[self.my_id][best_component]
+        logging.debug("Selected component: %s, for move: %s", best_component, moves)
 
-        print("Best move: ", best_move)
-        best_move_pos = self.board.idx_to_pos(best_move)
-        my_position_idx = self.board.bots[self.my_id]
-        my_position = self.board.idx_to_pos(my_position_idx)
-        if best_move_pos[0] < my_position[0]:
-            return "LEFT"
-        if best_move_pos[0] > my_position[0]:
-            return "RIGHT"
-        if best_move_pos[1] < my_position[1]:
-            return "UP"
-        if best_move_pos[1] > my_position[1]:
-            return "DOWN"
+        best_score = -100
+        for move in moves:
+            score = 5 - len(self.board.adjacent_cells[move])
+            score -= 10 if move in self.board.articulation_points else 0
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+        return best_move

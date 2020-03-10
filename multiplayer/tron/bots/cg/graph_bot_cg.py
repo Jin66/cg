@@ -1,3 +1,4 @@
+import logging
 import sys
 from queue import SimpleQueue
 
@@ -320,6 +321,8 @@ class GraphBot:
     def _previous_bot_id(self, current_bot_id):
         return current_bot_id - 1 if current_bot_id - 1 >= 0 else self.bots_cycle[-1]
 
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 bot = None
 turn = 0
