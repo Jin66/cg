@@ -1,5 +1,7 @@
 import cProfile
+import io
 import logging
+import pstats
 
 import sys
 
@@ -10,7 +12,7 @@ if __name__ == '__main__':
     pr = cProfile.Profile()
     pr.enable()
 
-    number_games = 1000
+    number_games = 100
     width = 10
     height = 10
     score = [0, 0, 0, 0]
@@ -22,7 +24,7 @@ if __name__ == '__main__':
         logging.warning("################### Game %s ###################", i)
         game_engine = GameEngine(debug=False, width=width, height=height)
         results = game_engine.run(
-            [GraphBot(width=width, height=height, depth=2),
+            [GraphBot(width=width, height=height, depth=1),
              GraphBot(width=width, height=height, depth=3),
              GraphBot(width=width, height=height, depth=4),
              GraphBot(width=width, height=height, depth=5)],
@@ -31,13 +33,13 @@ if __name__ == '__main__':
         score[results.winner] += 1
         logging.warning("################### End game %s, score: %s ###################", i, score)
 
-    print(score)
+    logging.info(score)
 
     pr.disable()
-    # s = io.StringIO()
-    # ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
-    # ps.print_stats()
-    # print(s.getvalue())
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    ps.print_stats()
+    print(s.getvalue())
 
     # Depth : [2, 3, 4, 5] => [14, 39, 35, 43]
     # seed: 9999193

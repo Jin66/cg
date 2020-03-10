@@ -25,10 +25,10 @@ class Board:
             self.width = board.width
             self.bots = board.bots.copy()
             self.bots_alive = board.bots_alive.copy()
-            self.cells = board.cells.copy()
+            self.cells = [*board.cells]
             self.adjacent_cells = []
             for idx in range(self.height * self.width):
-                self.adjacent_cells.append(board.adjacent_cells[idx].copy())
+                self.adjacent_cells.append([*board.adjacent_cells[idx]])
 
         self.components_map = {}
         self.components = []
@@ -181,12 +181,11 @@ class Board:
         bots_possible_components = {}
         for bot_id, _ in enumerate(self.bots):
             bots_possible_components[bot_id] = {}
+            if not self.bots_alive[bot_id]:
+                continue
             legal_moves = self.get_legal_moves(bot_id)
             for move in legal_moves:
-                try:
-                    comp = self.components_map[move]
-                except KeyError as e:
-                    print('I got a KeyError - reason "%s"' % str(e))
+                comp = self.components_map[move]
                 if self.components_map[move] not in bots_possible_components[bot_id]:
                     bots_possible_components[bot_id][self.components_map[move]] = []
                 bots_possible_components[bot_id][self.components_map[move]].append(move)
@@ -205,7 +204,7 @@ class GameTreeNode:
     def alpha_beta(self, alpha, beta, depth, bot_2_max):
         if depth == 0:
             logging.debug("Evaluate node for %s with move %s", self.bot_id, self.move)
-            self.board.print()
+            # self.board.print()
             score = self._evaluate(bot_2_max)
             logging.debug("Score %s", score)
             self.score = score
@@ -224,8 +223,8 @@ class GameTreeNode:
                 next_node = GameTreeNode(-1, self.bots_cycle, next_board, move)
                 self.children.append(next_node)
             logging.debug("All children built (%s)", len(self.children))
-            for children in self.children:
-                children.board.print()
+            # for children in self.children:
+            #     children.board.print()
             max_score = - math.inf
             for children in self.children:
                 max_score = max(max_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
@@ -240,7 +239,7 @@ class GameTreeNode:
 
         else:
             logging.debug("Opp bot node for %s", self.move)
-            self.board.print()
+            # self.board.print()
             # Create the children with all combinations of opponent moves in one go
             self.children.extend(self._build_opp_children_nodes(bot_2_max))
             if not self.children:
@@ -286,8 +285,8 @@ class GameTreeNode:
                         next_node = GameTreeNode(bot_2_max, self.bots_cycle, board=next_board)
                         current_children.append(next_node)
         logging.debug("All children built (%s)", len(current_children))
-        for children in current_children:
-            children.board.print()
+        # for children in current_children:
+        # children.board.print()
         return current_children
 
     def _evaluate(self, bot_2_max):
@@ -353,7 +352,7 @@ class GraphBot(AbstractBot):
 
     def get_next_play(self):
         logging.info("Bot playing %s", self.my_id)
-        self.board.print(logging.DEBUG)
+        # self.board.print(logging.DEBUG)
 
         # Compute graph indicators / structural elements
         self.board.compute_all_articulation_points_and_components()
