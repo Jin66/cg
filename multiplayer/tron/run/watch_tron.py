@@ -6,12 +6,20 @@ from multiplayer.tron.engine import GameEngine
 
 if __name__ == '__main__':
 
-    width = 30
-    height = 20
+    width = 10
+    height = 10
 
     # Execute a simple game
+    bot_list4 = [BasicBot(width=width, height=height), GraphBot(width=width, height=height), BasicBot(width=width, height=height), BasicBot(width=width, height=height)]
+    bot_list = [GraphBot(width=width, height=height, depth=1), GraphBot(width=width, height=height, depth=3)]
+
+    # Execute the game
+    seed = 9450568
     game_engine = GameEngine(debug=False, width=width, height=height)
-    results = game_engine.run([BasicBot(width=width, height=height), GraphBot(width=width, height=height), BasicBot(width=width, height=height), BasicBot(width=width, height=height)])
+    results = game_engine.run(
+        [GraphBot(width=width, height=height, depth=1),
+         GraphBot(width=width, height=height, depth=6)
+         ], seed=seed)
     print(results)
 
     # Display the game on TV !

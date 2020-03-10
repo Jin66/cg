@@ -46,15 +46,17 @@ if __name__ == '__main__':
     botRandom2 = NNBot(can_lose_stupidly=True,
                        input_modes=[InputMode.DistanceSquare, InputMode.DistanceDiag, InputMode.BotsPosition])
 
-    number_games = 100
-    width = 10
-    height = 10
-    winner = [0, 0]
+    number_games = 1
+    width = 6
+    height = 6
+    winner = [0, 0, 0, 0]
     seed = None
     for i in range(number_games):
         game_engine = GameEngine(debug=False, width=width, height=height)
         results = game_engine.run(
-            [GraphBot(width=width, height=height, depth=1), GraphBot(width=width, height=height, depth=4)], seed=seed)
+            [BasicBot(width=width, height=height),
+             GraphBot(width=width, height=height, depth=6)],
+            seed=seed)
         print("Match", i, results)
         winner[results.winner] += 1
 

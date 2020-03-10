@@ -125,6 +125,7 @@ class GameEngine:
         while True:
             is_finished = self.next_turn()
             if is_finished:
+                print("Seed is:", seed)
                 return self.get_results()
 
     def next_turn(self):

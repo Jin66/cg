@@ -187,7 +187,7 @@ class Board:
         return bots_possible_components
 
 
-class BoardTreeNode:
+class GameTreeNode:
     def __init__(self, bot_id, bots_cycle, board=None, move=None):
         self.bots_cycle = bots_cycle
         self.bot_id = bot_id
@@ -199,7 +199,7 @@ class BoardTreeNode:
     def alpha_beta(self, alpha, beta, depth, bot_2_max):
         if depth == 0:
             print("Evaluate node for ", self.bot_id, "with move", self.move)
-            # self.board.print()
+            self.board.print()
             score = self._evaluate(bot_2_max)
             print("Score ", score)
             self.score = score
@@ -215,11 +215,11 @@ class BoardTreeNode:
             for move in legal_moves:
                 next_board = Board(board=self.board)
                 next_board.set_bot_position_by_idx(self.bot_id, move)
-                next_node = BoardTreeNode(-1, self.bots_cycle, next_board, move)
+                next_node = GameTreeNode(-1, self.bots_cycle, next_board, move)
                 self.children.append(next_node)
             print("All children built (", len(self.children), ")")
-            # for children in self.children:
-            #    children.board.print()
+            for children in self.children:
+                children.board.print()
             max_score = - math.inf
             for children in self.children:
                 max_score = max(max_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
@@ -234,7 +234,7 @@ class BoardTreeNode:
 
         else:
             print("Opp bot node for ", self.move)
-            # self.board.print()
+            self.board.print()
             # Create the children with all combinations of opponent moves in one go
             self.children.extend(self._build_opp_children_nodes(bot_2_max))
             if not self.children:
@@ -269,14 +269,14 @@ class BoardTreeNode:
                         for move in legal_moves:
                             next_board = Board(board=children.board)
                             next_board.set_bot_position_by_idx(opp_bot_id, move)
-                            next_node = BoardTreeNode(bot_2_max, self.bots_cycle, board=next_board)
+                            next_node = GameTreeNode(bot_2_max, self.bots_cycle, board=next_board)
                             new_children.append(next_node)
                     current_children = new_children
                 else:
                     for move in legal_moves:
                         next_board = Board(board=self.board)
                         next_board.set_bot_position_by_idx(opp_bot_id, move)
-                        next_node = BoardTreeNode(bot_2_max, self.bots_cycle, board=next_board)
+                        next_node = GameTreeNode(bot_2_max, self.bots_cycle, board=next_board)
                         current_children.append(next_node)
         print("All children built (", len(current_children), ")")
         # for children in current_children:
@@ -287,9 +287,10 @@ class BoardTreeNode:
         distance_to_all_cells = {}
         bot_closest_to_cell = {}
         for bot_id, bot_pos in self.board.bots.items():
+            #  {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
             distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
             bot_closest_to_cell[bot_id] = 0
-
+        # print(distance_to_all_cells)
         for idx_cell in range(self.board.width * self.board.height):
             best_bot = None
             min_distance = 1000
@@ -351,16 +352,16 @@ class GraphBot(AbstractBot):
     def get_next_play(self):
         self.board.print()
         self.board.compute_all_articulation_points_and_components()
-        print("Comp", self.board.components)
-        print("Comp Map", self.board.components_map)
-        print("Articulation", self.board.articulation_points)
+        # print("Comp", self.board.components)
+        # print("Comp Map", self.board.components_map)
+        # print("Articulation", self.board.articulation_points)
 
         # Simple mecanism for now :
         # 1. If in a separate component than the opponents : space filling.
         # 2. Else, take the move that decrease the most the distance to all tiles
 
         bot_possible_components = self.board.compute_bot_possible_components()
-        print(bot_possible_components)
+        # print(bot_possible_components)
         bots_components = {idx: set() for idx in range(self.nb_players)}
         for bot_id, components_by_move in bot_possible_components.items():
             bots_components[bot_id].update(components_by_move.keys())
@@ -375,7 +376,7 @@ class GraphBot(AbstractBot):
                 break
 
         print("Am I alone ? ", is_alone)
-        print("My components  ", my_components)
+        # print("My components  ", my_components)
         best_move = None
         if len(my_components) == 0:
             print("No more room to move ! ")
@@ -401,7 +402,7 @@ class GraphBot(AbstractBot):
                     best_score = score
                     best_move = move
         else:
-            tree_node = BoardTreeNode(self.my_id, self.bots_cycle, board=self.board)
+            tree_node = GameTreeNode(self.my_id, self.bots_cycle, board=self.board)
             tree_node.alpha_beta(-math.inf, math.inf, self.depth, self.my_id)
             print("Resultats alpha_beta : ")
             max_score = -math.inf
@@ -424,6 +425,3 @@ class GraphBot(AbstractBot):
             return "UP"
         if best_move_pos[1] > my_position[1]:
             return "DOWN"
-
-    def _previous_bot_id(self, current_bot_id):
-        return current_bot_id - 1 if current_bot_id - 1 >= 0 else self.bots_cycle[-1]
