@@ -81,7 +81,7 @@ class Board:
 
     def update_accessible_neighbors(self, pos):
         for neighbor in self.neighbors[pos]:
-            if self.get_cell_state(pos[0], pos[1]) is not -1 and self.neighbors[neighbor].__contains__(pos):
+            if self.get_cell_state(pos[0], pos[1]) != -1 and self.neighbors[neighbor].__contains__(pos):
                 self.neighbors[neighbor].remove(pos)
             elif not self.neighbors[neighbor].__contains__(pos):
                 self.neighbors[neighbor].append(pos)
@@ -105,6 +105,7 @@ class Board:
                 g_score[neighbor] = neighbor_g_score
 
         return closed_set
+
 
 class BasicBot(AbstractBot):
 

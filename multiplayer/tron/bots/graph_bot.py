@@ -1,6 +1,7 @@
-import math
 import logging
 from queue import SimpleQueue
+
+import math
 
 from multiplayer.tron.bots.abstract_bot import AbstractBot
 
@@ -17,9 +18,7 @@ class Board:
             self.bots = {}
             self.bots_alive = {}
             self.cells = [-1] * (self.width * self.height)
-            self.adjacent_cells = []
-            for idx in range(self.height * self.width):
-                self.adjacent_cells.append(self._accessible_neighbors(idx))
+            self.adjacent_cells = [self._accessible_neighbors(idx) for idx in range(self.height * self.width)]
         else:
             self.height = board.height
             self.width = board.width
@@ -27,8 +26,6 @@ class Board:
             self.bots_alive = board.bots_alive.copy()
             self.cells = [*board.cells]
             self.adjacent_cells = [[*adjacent_cells] for adjacent_cells in board.adjacent_cells]
-            # for idx in range(self.height * self.width):
-            #    self.adjacent_cells.append([*board.adjacent_cells[idx]])
 
         self.components_map = {}
         self.components = []
@@ -95,7 +92,7 @@ class Board:
             self.update_adjacency_graph(cell_idx)
 
     def print(self, level=logging.DEBUG):
-        output = ""
+        output = "\n"
         for i in range(self.height):
             for j in range(self.width):
                 if self.cell(j, i) == -1:
@@ -103,7 +100,8 @@ class Board:
                 else:
                     output += str(self.cell(j, i))
             output += "\n"
-        logging.log(level, output)
+        #  logging.log(level, output)
+        print(output)
 
     def compute_graph_components(self):
         for idx in range(self.height * self.width):
@@ -138,6 +136,40 @@ class Board:
                     visited[neighbor] = True
                     distances[neighbor] = distances[current_idx] + 1
         return distances
+
+    def closests_bots_2_cells(self, first_bot_id):
+        visited = [False] * (self.height * self.width)
+        bots_number = len(self.bots)
+
+        # Init structures
+        bots_closest_2_cells = {}
+        open_sets = {}  # queue is slower but more readable...
+        counters = {}
+        bots_cycle = []
+        for bot_id in range(bots_number):
+            if self.bots_alive[bot_id]:
+                open_sets[bot_id] = [self.bots[bot_id]]
+                counters[bot_id] = 0
+                bots_closest_2_cells[bot_id] = 0
+                bots_cycle.append((bot_id + first_bot_id) % bots_number)
+
+        count_done = 0
+        while count_done < bots_number:
+            count_done = 0
+            for bot_id in bots_cycle:
+                if len(open_sets[bot_id]) <= counters[bot_id]:
+                    count_done += 1
+                    continue
+                current_open_set = [*open_sets[bot_id][counters[bot_id]:]]
+                for cell_idx in current_open_set:
+                    for neighbor in self.adjacent_cells[cell_idx]:
+                        if not visited[neighbor]:
+                            open_sets[bot_id].append(neighbor)
+                            visited[neighbor] = True
+                            print(neighbor, "is close to", bot_id)
+                            bots_closest_2_cells[bot_id] += 1
+                    counters[bot_id] += 1
+        return bots_closest_2_cells
 
     def compute_all_articulation_points_and_components(self):
         for idx in range(self.height * self.width):
@@ -364,6 +396,12 @@ class GraphBot(AbstractBot):
         # Computes bots components
         bot_possible_components = self.board.compute_bot_possible_components()
         bots_components = self._bots_components(bot_possible_components)
+
+        # Test
+        self.board.print(logging.WARN)
+        print({k: v for k, v in sorted(self.board.distance_all_accessible_cells(self.board.bots[0]).items(), key=lambda item: item[0])})
+        print({k: v for k, v in sorted(self.board.distance_all_accessible_cells(self.board.bots[1]).items(), key=lambda item: item[0])})
+        print(self.board.closests_bots_2_cells(self.my_id))
 
         # I am alone ?
         alone = self.__am_i_alone(bots_components)

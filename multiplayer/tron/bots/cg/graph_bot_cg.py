@@ -13,9 +13,7 @@ class Board:
             self.bots = {}
             self.bots_alive = {}
             self.cells = [-1] * (self.width * self.height)
-            self.adjacent_cells = []
-            for idx in range(self.height * self.width):
-                self.adjacent_cells.append(self._accessible_neighbors(idx))
+            self.adjacent_cells = [self._accessible_neighbors(idx) for idx in range(self.height * self.width)]
         else:
             self.height = board.height
             self.width = board.width
