@@ -23,8 +23,7 @@ class Board:
             self.bots_alive = board.bots_alive.copy()
             self.cells = [*board.cells]
             self.adjacent_cells = []
-            for idx in range(self.height * self.width):
-                self.adjacent_cells.append([*board.adjacent_cells[idx]])
+            self.adjacent_cells = [[*adjacent_cells] for adjacent_cells in board.adjacent_cells]
 
         self.components_map = {}
         self.components = []
@@ -121,15 +120,16 @@ class Board:
         return component
 
     def distance_all_accessible_cells(self, idx_pos):
-        visited = [False] * self.height * self.width
-        open_set = SimpleQueue()
-        open_set.put(idx_pos)
+        visited = [False] * (self.height * self.width)
+        open_set = [idx_pos]
+        counter = 0
         distances = {idx_pos: 0}
-        while not open_set.empty():
-            current_idx = open_set.get()
+        while len(open_set) > counter:
+            current_idx = open_set[counter]
+            counter += 1
             for neighbor in self.adjacent_cells[current_idx]:
                 if not visited[neighbor]:
-                    open_set.put(neighbor)
+                    open_set.append(neighbor)
                     visited[neighbor] = True
                     distances[neighbor] = distances[current_idx] + 1
         return distances
