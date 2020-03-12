@@ -155,7 +155,7 @@ class Board:
                 bots_cycle.append(bot_id_for_cycle)
 
         count_done = 0
-        while count_done < bots_number:
+        while count_done < len(bots_cycle):
             count_done = 0
             for bot_id in bots_cycle:
                 if len(open_sets[bot_id]) <= counters[bot_id]:
@@ -352,9 +352,8 @@ class GameTreeNode:
         logging.debug("Bots closest to a given cell %s", bot_closest_to_cell)
         score = 0
         for bot_id in self.board.bots:
-            if bot_id == bot_2_max:
-                continue
-            score += bot_closest_to_cell[bot_2_max] - bot_closest_to_cell[bot_id]
+            if bot_id != bot_2_max and bot_id in bot_closest_to_cell:
+                score += bot_closest_to_cell[bot_2_max] - bot_closest_to_cell[bot_id]
         return score
 
     def _next_bot_id(self, current_bot_id):

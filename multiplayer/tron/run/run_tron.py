@@ -14,8 +14,8 @@ if __name__ == '__main__':
     pr.enable()
 
     number_games = 100
-    width = 10
-    height = 10
+    width = 30
+    height = 20
     score = [0, 0, 0, 0]
     seed = None
     logging.basicConfig(stream=sys.stderr, level=logging.WARN)
@@ -25,9 +25,7 @@ if __name__ == '__main__':
         game_engine = GameEngine(debug=False, width=width, height=height)
         results = game_engine.run(
             [
-             GraphBot(width=width, height=height, depth=2),
              GraphBot(width=width, height=height, depth=3),
-             GraphBot(width=width, height=height, depth=4),
              GraphBot(width=width, height=height, depth=5)
              ],
             seed=seed)
@@ -42,6 +40,3 @@ if __name__ == '__main__':
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
     print(s.getvalue())
-
-    # Depth : [2, 3, 4, 5] => [14, 39, 35, 43]
-    # seed: 9999193
