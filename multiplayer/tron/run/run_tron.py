@@ -13,9 +13,9 @@ if __name__ == '__main__':
     pr = cProfile.Profile()
     pr.enable()
 
-    number_games = 1
-    width = 6
-    height = 4
+    number_games = 100
+    width = 10
+    height = 10
     score = [0, 0, 0, 0]
     seed = None
     logging.basicConfig(stream=sys.stderr, level=logging.WARN)
@@ -24,8 +24,11 @@ if __name__ == '__main__':
         logging.warning("################### Game %s ###################", i)
         game_engine = GameEngine(debug=False, width=width, height=height)
         results = game_engine.run(
-            [BasicBot(width=width, height=height),
-             GraphBot(width=width, height=height, depth=1)
+            [
+             GraphBot(width=width, height=height, depth=2),
+             GraphBot(width=width, height=height, depth=3),
+             GraphBot(width=width, height=height, depth=4),
+             GraphBot(width=width, height=height, depth=5)
              ],
             seed=seed)
         print("Match", i, results)

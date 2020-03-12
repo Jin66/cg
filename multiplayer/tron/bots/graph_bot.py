@@ -147,11 +147,12 @@ class Board:
         counters = {}
         bots_cycle = []
         for bot_id in range(bots_number):
-            if self.bots_alive[bot_id]:
-                open_sets[bot_id] = [self.bots[bot_id]]
-                counters[bot_id] = 0
-                bots_closest_2_cells[bot_id] = 0
-                bots_cycle.append((bot_id + first_bot_id) % bots_number)
+            bot_id_for_cycle = (bot_id + first_bot_id) % bots_number
+            if self.bots_alive[bot_id_for_cycle]:
+                open_sets[bot_id_for_cycle] = [self.bots[bot_id_for_cycle]]
+                counters[bot_id_for_cycle] = 0
+                bots_closest_2_cells[bot_id_for_cycle] = 0
+                bots_cycle.append(bot_id_for_cycle)
 
         count_done = 0
         while count_done < bots_number:
@@ -166,7 +167,6 @@ class Board:
                         if not visited[neighbor]:
                             open_sets[bot_id].append(neighbor)
                             visited[neighbor] = True
-                            print(neighbor, "is close to", bot_id)
                             bots_closest_2_cells[bot_id] += 1
                     counters[bot_id] += 1
         return bots_closest_2_cells
@@ -226,6 +226,7 @@ class Board:
 
 
 class GameTreeNode:
+
     def __init__(self, bot_id, bots_cycle, board=None, move=None):
         self.bots_cycle = bots_cycle
         self.bot_id = bot_id
@@ -323,25 +324,31 @@ class GameTreeNode:
         return current_children
 
     def _evaluate(self, bot_2_max):
-        distance_to_all_cells = {}
-        bot_closest_to_cell = {}
-        for bot_id, bot_pos in self.board.bots.items():
-            # To sort if necessary {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
-            distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
-            bot_closest_to_cell[bot_id] = 0
-        for idx_cell in range(self.board.width * self.board.height):
-            best_bot = None
-            min_distance = 1000
-            for bot_id in self.board.bots:
-                if idx_cell in distance_to_all_cells[bot_id]:
-                    distance = distance_to_all_cells[bot_id][idx_cell]
-                    if distance == min_distance:
-                        best_bot = None
-                    elif distance < min_distance:
-                        best_bot = bot_id
-                        min_distance = distance
-            if best_bot is not None:
-                bot_closest_to_cell[best_bot] += 1
+        # distance_to_all_cells = {}
+        # bot_closest_to_cell = {}
+        # for bot_id, bot_pos in self.board.bots.items():
+        #     # To sort if necessary {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
+        #     distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
+        #     bot_closest_to_cell[bot_id] = 0
+        # for idx_cell in range(self.board.width * self.board.height):
+        #     best_bot = None
+        #     min_distance = 1000
+        #     for bot_id in self.board.bots:
+        #         if idx_cell in distance_to_all_cells[bot_id]:
+        #             distance = distance_to_all_cells[bot_id][idx_cell]
+        #             if distance == min_distance:
+        #                 best_bot = None
+        #             elif distance < min_distance:
+        #                 best_bot = bot_id
+        #                 min_distance = distance
+        #     if best_bot is not None:
+        #         bot_closest_to_cell[best_bot] += 1
+
+        from_id = bot_2_max
+        if self.bot_id == bot_2_max:
+            from_id = self._next_bot_id(bot_2_max)
+
+        bot_closest_to_cell = self.board.closests_bots_2_cells(from_id)
         logging.debug("Bots closest to a given cell %s", bot_closest_to_cell)
         score = 0
         for bot_id in self.board.bots:
@@ -349,6 +356,9 @@ class GameTreeNode:
                 continue
             score += bot_closest_to_cell[bot_2_max] - bot_closest_to_cell[bot_id]
         return score
+
+    def _next_bot_id(self, current_bot_id):
+        return current_bot_id + 1 if current_bot_id + 1 < len(self.bots_cycle) else 0
 
 
 class GraphBot(AbstractBot):
@@ -398,10 +408,10 @@ class GraphBot(AbstractBot):
         bots_components = self._bots_components(bot_possible_components)
 
         # Test
-        self.board.print(logging.WARN)
-        print({k: v for k, v in sorted(self.board.distance_all_accessible_cells(self.board.bots[0]).items(), key=lambda item: item[0])})
-        print({k: v for k, v in sorted(self.board.distance_all_accessible_cells(self.board.bots[1]).items(), key=lambda item: item[0])})
-        print(self.board.closests_bots_2_cells(self.my_id))
+        # self.board.print(logging.WARN)
+        # print({k: v for k, v in sorted(self.board.distance_all_accessible_cells(self.board.bots[0]).items(), key=lambda item: item[0])})
+        # print({k: v for k, v in sorted(self.board.distance_all_accessible_cells(self.board.bots[1]).items(), key=lambda item: item[0])})
+        # print(self.board.closests_bots_2_cells(self.my_id))
 
         # I am alone ?
         alone = self.__am_i_alone(bots_components)
