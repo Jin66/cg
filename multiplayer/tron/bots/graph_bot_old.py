@@ -101,6 +101,7 @@ class Board:
                     output += str(self.cell(j, i))
             output += "\n"
         logging.log(level, output)
+        # print(output)
 
     def compute_graph_components(self):
         for idx in range(self.height * self.width):
@@ -243,7 +244,7 @@ class GameTreeNode:
             self.score = score
             return score
         if self.bot_id == bot_2_max:
-            logging.debug("Bot to max %s", self.move)
+            logging.debug("My bot node %s", self.move)
             self.board.print()
             legal_moves = self.board.get_legal_moves(self.bot_id)
             if not legal_moves:
@@ -257,7 +258,7 @@ class GameTreeNode:
                 self.children.append(next_node)
             logging.debug("All children built (%s)", len(self.children))
             # for children in self.children:
-            #    children.board.print()
+            #     children.board.print()
             max_score = - math.inf
             for children in self.children:
                 max_score = max(max_score, children.alpha_beta(alpha, beta, depth - 1, bot_2_max))
@@ -271,7 +272,7 @@ class GameTreeNode:
             return max_score
 
         else:
-            logging.debug("Opp Bot node for %s", self.move)
+            logging.debug("Opp bot node for %s", self.move)
             self.board.print()
             # Create the children with all combinations of opponent moves in one go
             self.children.extend(self._build_opp_children_nodes(bot_2_max))
@@ -323,31 +324,31 @@ class GameTreeNode:
         return current_children
 
     def _evaluate(self, bot_2_max):
-        # distance_to_all_cells = {}
-        # bot_closest_to_cell = {}
-        # for bot_id, bot_pos in self.board.bots.items():
-        #     # To sort if necessary {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
-        #     distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
-        #     bot_closest_to_cell[bot_id] = 0
-        # for idx_cell in range(self.board.width * self.board.height):
-        #     best_bot = None
-        #     min_distance = 1000
-        #     for bot_id in self.board.bots:
-        #         if idx_cell in distance_to_all_cells[bot_id]:
-        #             distance = distance_to_all_cells[bot_id][idx_cell]
-        #             if distance == min_distance:
-        #                 best_bot = None
-        #             elif distance < min_distance:
-        #                 best_bot = bot_id
-        #                 min_distance = distance
-        #     if best_bot is not None:
-        #         bot_closest_to_cell[best_bot] += 1
+        distance_to_all_cells = {}
+        bot_closest_to_cell = {}
+        for bot_id, bot_pos in self.board.bots.items():
+            # To sort if necessary {k: v for k, v in sorted(distance_to_cells.items(), key=lambda item: item[0])}
+            distance_to_all_cells[bot_id] = self.board.distance_all_accessible_cells(bot_pos)
+            bot_closest_to_cell[bot_id] = 0
+        for idx_cell in range(self.board.width * self.board.height):
+            best_bot = None
+            min_distance = 1000
+            for bot_id in self.board.bots:
+                if idx_cell in distance_to_all_cells[bot_id]:
+                    distance = distance_to_all_cells[bot_id][idx_cell]
+                    if distance == min_distance:
+                        best_bot = None
+                    elif distance < min_distance:
+                        best_bot = bot_id
+                        min_distance = distance
+            if best_bot is not None:
+                bot_closest_to_cell[best_bot] += 1
 
-        from_id = bot_2_max
-        if self.bot_id == -1:
-            from_id = self._next_bot_id(bot_2_max)
-
-        bot_closest_to_cell = self.board.closests_bots_2_cells(from_id)
+        # from_id = bot_2_max
+        # if self.bot_id == bot_2_max:
+        #     from_id = self._next_bot_id(bot_2_max)
+        #
+        # bot_closest_to_cell = self.board.closests_bots_2_cells(from_id)
         logging.debug("Bots closest to a given cell %s", bot_closest_to_cell)
         score = 0
         for bot_id in self.board.bots:
@@ -359,7 +360,8 @@ class GameTreeNode:
         return current_bot_id + 1 if current_bot_id + 1 < len(self.bots_cycle) else 0
 
 
-class GraphBot(AbstractBot):
+class GraphBotOld(AbstractBot):
+    max_depth = 3
 
     def __init__(self, width=30, height=20, depth=1):
         self.board = Board(width=width, height=height)

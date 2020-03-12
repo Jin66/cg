@@ -7,6 +7,7 @@ import sys
 
 from multiplayer.tron.bots.basic_bot import BasicBot
 from multiplayer.tron.bots.graph_bot import GraphBot
+from multiplayer.tron.bots.graph_bot_old import GraphBotOld
 from multiplayer.tron.engine import GameEngine
 
 if __name__ == '__main__':
@@ -14,10 +15,10 @@ if __name__ == '__main__':
     pr.enable()
 
     number_games = 100
-    width = 30
+    width = 20
     height = 20
     score = [0, 0, 0, 0]
-    seed = None
+    seed = 4097354
     logging.basicConfig(stream=sys.stderr, level=logging.WARN)
 
     for i in range(number_games):
@@ -25,8 +26,8 @@ if __name__ == '__main__':
         game_engine = GameEngine(debug=False, width=width, height=height)
         results = game_engine.run(
             [
-             GraphBot(width=width, height=height, depth=3),
-             GraphBot(width=width, height=height, depth=5)
+             GraphBotOld(width=width, height=height, depth=1),
+             GraphBot(width=width, height=height, depth=1)
              ],
             seed=seed)
         print("Match", i, results)
