@@ -14,11 +14,11 @@ if __name__ == '__main__':
     pr = cProfile.Profile()
     pr.enable()
 
-    number_games = 100
+    number_games = 1000
     width = 20
     height = 20
     score = [0, 0, 0, 0]
-    seed = 4097354
+    seed = None
     logging.basicConfig(stream=sys.stderr, level=logging.WARN)
 
     for i in range(number_games):
@@ -26,8 +26,8 @@ if __name__ == '__main__':
         game_engine = GameEngine(debug=False, width=width, height=height)
         results = game_engine.run(
             [
-             GraphBotOld(width=width, height=height, depth=1),
-             GraphBot(width=width, height=height, depth=1)
+             GraphBotOld(width=width, height=height, depth=3),
+             GraphBot(width=width, height=height, depth=3)
              ],
             seed=seed)
         print("Match", i, results)
@@ -35,9 +35,9 @@ if __name__ == '__main__':
         logging.warning("################### End game %s, score: %s ###################", i, score)
 
     logging.info(score)
-
-    pr.disable()
-    s = io.StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
-    ps.print_stats()
-    print(s.getvalue())
+    #
+    # pr.disable()
+    # s = io.StringIO()
+    # ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    # ps.print_stats()
+    # print(s.getvalue())

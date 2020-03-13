@@ -78,6 +78,9 @@ class Board:
         self.components.clear()
         self.articulation_points.clear()
 
+    def get_bots_cycle(self, first_bot_id):
+        return [(bot_id + first_bot_id) % len(self.bots) for bot_id in range(len(self.bots))]
+
     def get_legal_moves(self, bot_id):
         return self.adjacent_cells[self.bots[bot_id]]
 
@@ -391,6 +394,7 @@ class GraphBotOld(AbstractBot):
                 self.board.set_bot_position(line_number, tuple([int(x1), int(y1)]))
             line_number += 1
         self.turn += 1
+        self.bots_cycle = self.board.get_bots_cycle(self.my_id)
 
     def get_next_play(self):
         logging.info("Bot playing %s", self.my_id)

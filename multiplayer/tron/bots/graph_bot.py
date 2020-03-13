@@ -69,6 +69,9 @@ class Board:
         idx_pos = pos[0] + pos[1] * self.width
         self.set_bot_position_by_idx(bot_id, idx_pos)
 
+    def get_bots_cycle(self, first_bot_id):
+        return [(bot_id + first_bot_id) % len(self.bots) for bot_id in range(len(self.bots))]
+
     def set_bot_position_by_idx(self, bot_id, idx_pos):
         self.cells[idx_pos] = bot_id
         self.bots[bot_id] = idx_pos
@@ -373,7 +376,6 @@ class GraphBot(AbstractBot):
         nb_players_str, my_id_str = init.split()
         self.nb_players = int(nb_players_str)
         self.my_id = int(my_id_str)
-        self.bots_cycle = [i for i in range(self.nb_players) if i != self.my_id]
 
     def get_main_input(self, main_lines):
         line_number = 0
@@ -389,6 +391,8 @@ class GraphBot(AbstractBot):
                 self.board.set_bot_position(line_number, tuple([int(x1), int(y1)]))
             line_number += 1
         self.turn += 1
+        self.bots_cycle = self.board.get_bots_cycle(self.my_id)
+        logging.debug("Bot cycles: %s", self.bots_cycle)
 
     def get_next_play(self):
         logging.info("Bot playing %s", self.my_id)
